@@ -1,0 +1,2218 @@
+<title>bubka — прототип приложения v0.7</title>
+<style>
+  :root{
+    --bg:#FBF9F6; --card:#FFFFFF; --elev:#F0EBE2;
+    --text:#2E2B27; --text2:#8C8579; --hairline:#E6E0D5;
+    --accent:#6E7F72; --accent-deep:#53645A; --accent-soft:#E6EBE6;
+    --terra:#C08060; --terra-soft:#F2E7DF;
+    --sand:#B29876; --sand-soft:#EBDFD6;
+    --dusk:#8B92AD; --dusk-soft:#E9EAF2;
+    --warn:#D9A05B; --danger:#C46A5A;
+    --page:#E8E3DA; --frame:#2E2B27;
+    --shadow:0 2px 12px rgba(43,41,38,.06);
+    --shadow-lg:0 12px 40px rgba(43,41,38,.14);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1B1916; --card:#26221E; --elev:#322D26;
+      --text:#F1EDE6; --text2:#A59D90; --hairline:#3A342C;
+      --accent:#93A796; --accent-deep:#7B9080; --accent-soft:#2B342D;
+      --terra:#CE8F70; --terra-soft:#3A2C24;
+      --sand:#C9AE87; --sand-soft:#383026;
+      --dusk:#9BA2BC; --dusk-soft:#2B2E39;
+      --page:#131110; --frame:#000;
+      --shadow:0 2px 12px rgba(0,0,0,.3);
+      --shadow-lg:0 12px 40px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1B1916; --card:#26221E; --elev:#322D26;
+    --text:#F1EDE6; --text2:#A59D90; --hairline:#3A342C;
+    --accent:#93A796; --accent-deep:#7B9080; --accent-soft:#2B342D;
+    --terra:#CE8F70; --terra-soft:#3A2C24;
+    --sand:#C9AE87; --sand-soft:#383026;
+    --dusk:#9BA2BC; --dusk-soft:#2B2E39;
+    --warn:#D9A05B; --danger:#C46A5A;
+    --page:#131110; --frame:#000;
+    --shadow:0 2px 12px rgba(0,0,0,.3);
+    --shadow-lg:0 12px 40px rgba(0,0,0,.5);
+  }
+  :root[data-theme="light"]{
+    --bg:#FBF9F6; --card:#FFFFFF; --elev:#F0EBE2;
+    --text:#2E2B27; --text2:#8C8579; --hairline:#E6E0D5;
+    --accent:#6E7F72; --accent-deep:#53645A; --accent-soft:#E6EBE6;
+    --terra:#C08060; --terra-soft:#F2E7DF;
+    --sand:#B29876; --sand-soft:#EBDFD6;
+    --dusk:#8B92AD; --dusk-soft:#E9EAF2;
+    --warn:#D9A05B; --danger:#C46A5A;
+    --page:#E8E3DA; --frame:#2E2B27;
+    --shadow:0 2px 12px rgba(43,41,38,.06);
+    --shadow-lg:0 12px 40px rgba(43,41,38,.14);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--page);}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+    color:var(--text); -webkit-font-smoothing:antialiased;
+    min-height:100vh; padding:40px 16px 64px;
+    display:flex; flex-direction:column; align-items:center; gap:28px;
+  }
+  .intro{max-width:460px; text-align:center;}
+  .intro .brand{font-size:13px; font-weight:600; letter-spacing:.18em; color:var(--accent); text-transform:uppercase;}
+  .intro h1{font-size:26px; font-weight:700; letter-spacing:-.02em; margin-top:8px; text-wrap:balance;}
+  .intro p{font-size:14px; line-height:1.55; color:var(--text2); margin-top:10px; text-wrap:balance;}
+  .intro .hints{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:16px;}
+  .intro .hint{font-size:12px; color:var(--text2); background:var(--card); border:1px solid var(--hairline); border-radius:999px; padding:6px 12px;}
+
+  /* ── Phone frame ── */
+  .phone{width:390px; max-width:100%; height:800px; flex:none; background:var(--frame); border-radius:54px; padding:10px; box-shadow:var(--shadow-lg);}
+  .screen-wrap{position:relative; width:100%; height:100%; overflow:hidden; background:var(--bg); border-radius:44px; display:flex; flex-direction:column;}
+  .statusbar{flex:none; height:52px; display:flex; align-items:center; justify-content:space-between; padding:14px 28px 0; font-size:14px; font-weight:600; position:relative; z-index:5;}
+  .island{position:absolute; left:50%; top:12px; transform:translateX(-50%); width:118px; height:32px; background:var(--frame); border-radius:20px;}
+
+  .screens{flex:1; position:relative; overflow:hidden;}
+  .screen{position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; padding:8px 20px 120px; display:none; scrollbar-width:none;}
+  .screen::-webkit-scrollbar{display:none;}
+  .screen.active{display:block;}
+  .screen.active .rise{animation:rise .5s cubic-bezier(.22,.9,.3,1) both;}
+  .screen.active .rise:nth-child(2){animation-delay:.04s}
+  .screen.active .rise:nth-child(3){animation-delay:.08s}
+  .screen.active .rise:nth-child(4){animation-delay:.12s}
+  .screen.active .rise:nth-child(5){animation-delay:.16s}
+  .screen.active .rise:nth-child(6){animation-delay:.2s}
+  .screen.active .rise:nth-child(7){animation-delay:.24s}
+  .screen.active .rise:nth-child(8){animation-delay:.28s}
+  .screen.active .rise:nth-child(9){animation-delay:.32s}
+  @keyframes rise{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+
+  /* ── Tab bar: 4 раздела + центральная ✦ ── */
+  .tabbar{position:absolute; left:0; right:0; bottom:0; z-index:20; display:flex; align-items:center; padding:10px 8px 26px;
+    background:color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid var(--hairline);}
+  .tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; cursor:pointer;
+    color:var(--text2); font-family:inherit; font-size:10px; font-weight:600; padding:4px 0; transition:color .25s;}
+  .tab svg{width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+  .tab.active{color:var(--accent);}
+  .tab.active svg{transform:translateY(-2px) scale(1.08);}
+  .ai-fab{flex:none; width:56px; height:56px; margin:-30px 6px 0; border-radius:50%; border:none; cursor:pointer;
+    background:linear-gradient(150deg, var(--accent), var(--accent-deep)); color:#fff; font-size:22px; font-family:inherit;
+    box-shadow:0 10px 24px rgba(83,100,90,.42), 0 0 0 5px var(--bg);
+    display:flex; align-items:center; justify-content:center; transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
+  .ai-fab:active{transform:scale(.92);}
+  .ai-fab.active{transform:translateY(-3px) scale(1.05);}
+
+  /* ── Primitives ── */
+  .card{background:var(--card); border-radius:20px; padding:18px; box-shadow:var(--shadow); margin-bottom:12px;}
+  .row{display:flex; align-items:center; gap:12px;}
+  .grow{flex:1; min-width:0;}
+  .eyebrow{font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text2);}
+  .h-card{font-size:17px; font-weight:650; letter-spacing:-.01em; margin-top:3px;}
+  .sub{font-size:13px; color:var(--text2); line-height:1.45; margin-top:4px;}
+  .num{font-variant-numeric:tabular-nums; font-weight:700;}
+  .h-screen{font-size:28px; font-weight:750; letter-spacing:-.02em;}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; cursor:pointer; font-family:inherit;
+    font-weight:600; font-size:15px; border-radius:14px; padding:14px 18px; width:100%;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1), filter .18s;}
+  .btn:active{transform:scale(.97); filter:brightness(.95);}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-soft{background:var(--accent-soft); color:var(--accent);}
+  .btn-dusk{background:var(--dusk); color:#fff;}
+
+  .chip{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; padding:7px 13px; border-radius:999px;
+    background:var(--elev); color:var(--text2); border:none; cursor:pointer; font-family:inherit; white-space:nowrap; transition:all .2s;}
+  .chip.on{background:var(--accent); color:#fff;}
+  .dot{width:7px; height:7px; border-radius:50%; flex:none;}
+  .tag{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:7px; background:var(--elev); color:var(--text2); white-space:nowrap;}
+  .tag.green{background:var(--accent-soft); color:var(--accent);}
+  .tag.terra{background:var(--terra-soft); color:var(--terra);}
+  .tag.dusk{background:var(--dusk-soft); color:var(--dusk);}
+  .tag.red{background:color-mix(in srgb, var(--danger) 12%, transparent); color:var(--danger);}
+
+  .tinted-dusk{background:var(--dusk-soft);}
+  .tinted-terra{background:var(--terra-soft);}
+  .tinted-sand{background:var(--sand-soft);}
+  .tinted-accent{background:var(--accent-soft);}
+  .emoji-lg{font-size:30px; flex:none; width:48px; height:48px; display:flex; align-items:center; justify-content:center;}
+  .wiggle{animation:wiggle 3.5s ease-in-out infinite;}
+  @keyframes wiggle{0%,86%,100%{transform:rotate(0);} 90%{transform:rotate(-8deg);} 94%{transform:rotate(8deg);} 98%{transform:rotate(-4deg);}}
+
+  .segs{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 14px; scrollbar-width:none;}
+  .segs::-webkit-scrollbar{display:none;}
+  .segs .chip{flex:none;}
+  .subpage{display:none;}
+  .subpage.on{display:block; animation:rise .4s cubic-bezier(.22,.9,.3,1) both;}
+
+  /* ── Главная ── */
+  .greet{display:flex; align-items:center; gap:14px; padding:14px 2px 14px;}
+  .avatar{width:52px; height:52px; border-radius:50%; background:var(--sand-soft); display:flex; align-items:center; justify-content:center;
+    font-size:26px; flex:none; border:2px solid var(--sand); cursor:pointer;}
+  .greet h2{font-size:21px; font-weight:700; letter-spacing:-.02em;}
+  .greet .age{font-size:13.5px; color:var(--text2); margin-top:2px;}
+  .ring{width:46px; height:46px; flex:none;}
+  .ring circle{fill:none; stroke-width:4.5; stroke-linecap:round;}
+  .ring .track{stroke:var(--elev);}
+  .ring .prog{stroke:var(--accent); stroke-dasharray:113; stroke-dashoffset:113; transform:rotate(-90deg); transform-origin:center;
+    animation:ringIn 1.2s .3s cubic-bezier(.22,.9,.3,1) forwards;}
+  @keyframes ringIn{to{stroke-dashoffset:37;}}
+  .ring text{font-size:11px; font-weight:700; fill:var(--text);}
+
+  .hero{position:relative; border-radius:24px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:12px; cursor:pointer;}
+  .hero-img{height:160px; display:flex; align-items:center; justify-content:center; font-size:74px;
+    background:radial-gradient(circle at 30% 25%, #F5DFC0 0%, #EFC9A0 55%, #E4B183 100%);}
+  :root[data-theme="dark"] .hero-img{background:radial-gradient(circle at 30% 25%, #4A3A28 0%, #3B2E20 60%, #2E241A 100%);}
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .hero-img{background:radial-gradient(circle at 30% 25%, #4A3A28 0%, #3B2E20 60%, #2E241A 100%);} }
+  .hero-img span{filter:drop-shadow(0 12px 22px rgba(120,70,20,.3)); animation:float 5s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-8px) rotate(2deg);}}
+  .hero-body{background:var(--card); padding:16px 18px 18px;}
+  .hero-body .actions{display:flex; gap:10px; margin-top:14px;}
+  .badge{position:absolute; top:14px; left:14px; background:rgba(255,255,255,.9); color:#2B2926; font-size:11px; font-weight:700;
+    letter-spacing:.1em; text-transform:uppercase; padding:6px 11px; border-radius:999px;}
+
+  .qa-row{display:flex; gap:10px; overflow-x:auto; padding:2px 2px 14px; scrollbar-width:none;}
+  .qa-row::-webkit-scrollbar{display:none;}
+  .qa{flex:none; width:74px; background:var(--card); border:none; border-radius:18px; padding:12px 4px; display:flex; flex-direction:column;
+    align-items:center; gap:6px; cursor:pointer; box-shadow:var(--shadow); font-family:inherit; transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+  .qa:active{transform:scale(.94);}
+  .qa .ico{width:40px; height:40px; border-radius:13px; background:var(--elev); display:flex; align-items:center; justify-content:center; font-size:19px;}
+  .qa span{font-size:10.5px; font-weight:600; color:var(--text2);}
+  .ai-strip{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 12px; scrollbar-width:none;}
+  .ai-strip::-webkit-scrollbar{display:none;}
+  .ai-chip{flex:none; display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:650; padding:10px 14px;
+    border-radius:999px; background:var(--accent-soft); color:var(--accent); border:1.5px dashed var(--accent); cursor:pointer; font-family:inherit;}
+  .ai-chip:active{transform:scale(.96);}
+
+  /* ── Главная v2: hero «сейчас» ── */
+  .hero-now{position:relative; border-radius:26px; padding:20px 20px 16px; margin-bottom:14px; box-shadow:var(--shadow); overflow:hidden;
+    background:linear-gradient(155deg, var(--dusk-soft) 0%, color-mix(in srgb, var(--dusk-soft) 55%, var(--bg)) 100%);}
+  .hero-now .top{display:flex; align-items:center; gap:14px;}
+  .hero-now .big-time{font-size:44px; font-weight:750; letter-spacing:-.03em; font-variant-numeric:tabular-nums; line-height:1; margin-top:4px;}
+  .hero-now .state{font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--dusk);}
+  .hero-now .until{font-size:13px; color:var(--text2); margin-top:8px; line-height:1.45;}
+  .hero-now .until b{color:var(--text);}
+  .arc{width:96px; height:96px; flex:none; margin-left:auto;}
+  .arc circle{fill:none; stroke-width:7; stroke-linecap:round;}
+  .arc .track2{stroke:color-mix(in srgb, var(--dusk) 18%, transparent);}
+  .arc .prog2{stroke:var(--dusk); stroke-dasharray:214; stroke-dashoffset:214; transform:rotate(-90deg); transform-origin:center;
+    animation:arcIn 1.3s .25s cubic-bezier(.22,.9,.3,1) forwards;}
+  @keyframes arcIn{to{stroke-dashoffset:58;}}
+  .arc-moon{font-size:30px;}
+  .hero-now .btn{margin-top:16px;}
+  /* адаптивный hero: mini — обычное состояние; разворачивается, когда сон важен (идёт сон / окно близко / утро и вечер) */
+  .hero-now.mini{padding:13px 16px 12px; border-radius:20px; margin-bottom:12px;}
+  .hero-now.mini .big-time{font-size:24px; margin-top:2px;}
+  .hero-now.mini .arc{width:48px; height:48px;}
+  .hero-now.mini .until{margin-top:4px; font-size:12.5px;}
+  .hero-now.mini #sleep-btn{display:none;}
+  .hero-now.mini #sleep-ai{margin-top:8px; padding:8px;}
+  .sleep-mini-btn{display:none; flex:none; border:none; cursor:pointer; font-family:inherit; font-weight:650; font-size:13px;
+    background:var(--dusk); color:#fff; border-radius:999px; padding:10px 15px; margin-left:6px; transition:transform .15s;}
+  .sleep-mini-btn:active{transform:scale(.94);}
+  .hero-now.mini .sleep-mini-btn{display:inline-flex;}
+  .ag-row.done{opacity:.55;}
+  .ag-row.done .an{text-decoration:line-through;}
+  /* ночная сцена во время сна (референс: Napper) */
+  .hero-now.sleeping{background:linear-gradient(155deg,#2E3142 0%,#232634 100%);}
+  .hero-now.sleeping .state{color:#9BA2C6;}
+  .hero-now.sleeping .big-time{color:#EDEEF6;}
+  .hero-now.sleeping .until{color:#B9BDD4;}
+  .hero-now.sleeping .until b{color:#EDEEF6;}
+  .hero-now.sleeping::after{content:'✦ ✧ ✦'; position:absolute; top:14px; right:18px; color:rgba(237,238,246,.4); font-size:11px; letter-spacing:7px; pointer-events:none;}
+  /* «время с последнего» на кнопках быстрой записи (референс: Huckleberry/Glow) */
+  .quick .ago{font-size:11px; color:var(--text2); font-weight:600;}
+  /* мини-прогресс к норме возраста в тайлах (референс: кольца Apple) */
+  .glance .gbar{height:3px; border-radius:99px; background:var(--elev); margin:6px 10px 0; overflow:hidden;}
+  .glance .gbar i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .6s ease;}
+  .glance .gbar i.low{background:var(--warn);}
+
+  /* сводка дня */
+  .glance{display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-bottom:16px;}
+  .glance button{border:none; font-family:inherit; cursor:pointer; background:var(--card); border-radius:16px; padding:11px 4px 10px;
+    text-align:center; box-shadow:var(--shadow); transition:transform .15s;}
+  .glance button:active{transform:scale(.94);}
+  .glance .gv{font-size:15px; font-weight:750; font-variant-numeric:tabular-nums; color:var(--text);}
+  .glance .gl{font-size:10px; color:var(--text2); margin-top:2px; font-weight:600;}
+  .glance .ge{font-size:16px; margin-bottom:3px;}
+
+  /* быстрая запись — компактные пилюли */
+  .quick{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 16px; scrollbar-width:none;}
+  .quick::-webkit-scrollbar{display:none;}
+  .quick button{flex:none; display:inline-flex; align-items:center; gap:7px; border:none; font-family:inherit; cursor:pointer;
+    background:var(--card); box-shadow:var(--shadow); color:var(--text); font-size:13px; font-weight:650;
+    border-radius:999px; padding:10px 15px; transition:transform .15s;}
+  .quick button:active{transform:scale(.94);}
+  .quick .qe{font-size:16px;}
+
+  /* дальше по плану */
+  .agenda{background:var(--card); border-radius:20px; padding:8px 16px; box-shadow:var(--shadow); margin-bottom:16px;}
+  .ag-row{display:flex; align-items:center; gap:12px; padding:12px 2px; border-bottom:1px solid var(--hairline); cursor:pointer;}
+  .ag-row:last-child{border-bottom:none;}
+  .ag-row .at{font-size:12.5px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text2); width:44px; flex:none;}
+  .ag-row.next .at{color:var(--accent);}
+  .ag-row .ae{font-size:19px; flex:none;}
+  .ag-row .an{font-size:14px; font-weight:600; color:var(--text);}
+  .ag-row .as{font-size:11.5px; color:var(--text2); margin-top:1px;}
+  .ag-row .chev{margin-left:auto; color:var(--text2); font-size:13px;}
+
+  /* карусель «Сегодня с малышом» */
+  .sec-head{display:flex; align-items:baseline; gap:8px; margin:0 2px 10px;}
+  .sec-head b{font-size:16px; font-weight:700; letter-spacing:-.01em;}
+  .sec-head span{font-size:11.5px; color:var(--text2); margin-left:auto;}
+  .carousel{display:flex; gap:11px; overflow-x:auto; padding:2px 2px 8px; scroll-snap-type:x mandatory; scrollbar-width:none; margin:0 -20px 10px; padding-left:20px; padding-right:20px;}
+  .carousel::-webkit-scrollbar{display:none;}
+  .c-card{flex:none; width:224px; scroll-snap-align:start; border-radius:22px; padding:16px 16px 15px; box-shadow:var(--shadow);
+    border:none; font-family:inherit; text-align:left; cursor:pointer; display:flex; flex-direction:column; min-height:150px;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1); background:var(--card);}
+  .c-card:active{transform:scale(.96);}
+  .c-card .ce{font-size:30px; margin-bottom:10px;}
+  .c-card .ck2{font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; margin-bottom:4px;}
+  .c-card .cn{font-size:14.5px; font-weight:700; color:var(--text); line-height:1.3; letter-spacing:-.01em;}
+  .c-card .cs{font-size:12px; color:var(--text2); line-height:1.45; margin-top:5px;}
+
+  .sleep-big{background:var(--dusk-soft); border-radius:24px; padding:20px; margin-bottom:12px; box-shadow:var(--shadow);}
+  .sleep-big .time{font-size:34px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-.02em; margin-top:6px;}
+  .moon-anim{display:inline-block; animation:float 4s ease-in-out infinite;}
+  .meal-line{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--hairline);}
+  .meal-line:last-child{border-bottom:none;}
+  .meal-line .t{font-size:12px; color:var(--text2); width:44px; flex:none; font-variant-numeric:tabular-nums; padding-top:2px;}
+
+  /* ── Поиск ── */
+  .search{width:100%; border:none; background:var(--card); box-shadow:var(--shadow); border-radius:14px; padding:13px 16px;
+    font-family:inherit; font-size:14px; color:var(--text); margin-bottom:12px;}
+  .search::placeholder{color:var(--text2);}
+
+  /* ── Журнал дня ── */
+  .j-row{background:var(--card); border-radius:16px; box-shadow:var(--shadow); margin-bottom:9px; overflow:hidden;}
+  .j-main{display:flex; gap:12px; align-items:center; padding:13px 15px; cursor:pointer;}
+  .j-main .jt{font-size:12px; color:var(--text2); width:42px; flex:none; font-variant-numeric:tabular-nums; font-weight:600;}
+  .j-main .je{font-size:20px; flex:none;}
+  .j-main .jn{font-size:14px; font-weight:650;}
+  .j-main .jd{font-size:12px; color:var(--text2); margin-top:1px;}
+  .j-act{display:none; gap:8px; padding:0 15px 13px;}
+  .j-row.open .j-act{display:flex;}
+  .j-act button{flex:1; border:none; font-family:inherit; font-size:12.5px; font-weight:650; padding:9px; border-radius:10px; cursor:pointer; background:var(--elev); color:var(--text);}
+  .j-act .del{background:color-mix(in srgb, var(--danger) 12%, transparent); color:var(--danger);}
+
+  /* ── Онбординг ── */
+  .onb-step{display:none;}
+  .onb-step.on{display:block; animation:rise .4s cubic-bezier(.22,.9,.3,1) both;}
+  .onb-opt{display:flex; align-items:center; gap:11px; border:1.5px solid var(--hairline); background:var(--card); border-radius:16px;
+    padding:14px 15px; margin-bottom:9px; cursor:pointer; font-size:14.5px; font-weight:600; transition:all .2s;}
+  .onb-opt.on{border-color:var(--accent); background:var(--accent-soft);}
+  .onb-dots{display:flex; gap:6px; justify-content:center; margin:16px 0 4px;}
+  .onb-dots span{width:7px; height:7px; border-radius:99px; background:var(--hairline); transition:all .3s;}
+  .onb-dots span.on{background:var(--accent); width:18px;}
+  .onb-input{width:100%; border:1.5px solid var(--hairline); background:var(--card); border-radius:16px; padding:14px 16px;
+    font-family:inherit; font-size:16px; font-weight:600; color:var(--text); margin-bottom:9px; outline:none;
+    -webkit-appearance:none; appearance:none; transition:border-color .2s;}
+  .onb-input:focus{border-color:var(--accent);}
+  .onb-input::placeholder{color:var(--text2); font-weight:500;}
+  .onb-row{display:flex; gap:9px;}
+  .onb-row .onb-input{flex:1; min-width:0;}
+  .onb-lbl{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text2); margin:12px 2px 8px; line-height:1.5;}
+  .skip{position:absolute; top:58px; right:20px; z-index:5; border:none; background:none; font-family:inherit; font-size:13px;
+    font-weight:600; color:var(--text2); cursor:pointer; padding:8px;}
+
+  /* ── Настроение мамы ── */
+  .mood-row{display:flex; gap:8px; margin:10px 0 4px;}
+  .mood-row button{flex:1; font-size:24px; padding:10px 0; border-radius:14px; border:none; background:var(--card);
+    box-shadow:var(--shadow); cursor:pointer; transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+  .mood-row button.on{background:var(--accent-soft); transform:scale(1.08);}
+
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  /* ── Питание ── */
+  .food-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .food{background:var(--card); border-radius:20px; overflow:hidden; box-shadow:var(--shadow); border:none; cursor:pointer;
+    font-family:inherit; text-align:left; padding:0; transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+  .food:active{transform:scale(.96);}
+  .food .pic{height:92px; display:flex; align-items:center; justify-content:center; font-size:44px;}
+  .food .meta{padding:11px 13px 13px;}
+  .food .name{font-size:14.5px; font-weight:650; color:var(--text); display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+  .food .age{font-size:11.5px; color:var(--text2); margin-top:3px;}
+  .allergen-tag{font-size:9.5px; font-weight:700; letter-spacing:.06em; color:var(--danger);
+    background:color-mix(in srgb, var(--danger) 12%, transparent); border-radius:6px; padding:2px 6px;}
+  .chips-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:14px; scrollbar-width:none;}
+  .chips-row::-webkit-scrollbar{display:none;}
+  .chips-row .chip{flex:none;}
+  .recipe{display:flex; gap:13px; background:var(--card); border:none; border-radius:18px; padding:12px; box-shadow:var(--shadow);
+    width:100%; font-family:inherit; text-align:left; cursor:pointer; margin-bottom:10px; align-items:center;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+  .recipe:active{transform:scale(.97);}
+  .recipe .rp{width:64px; height:64px; border-radius:14px; flex:none; display:flex; align-items:center; justify-content:center; font-size:32px;}
+  .recipe .rn{font-size:14.5px; font-weight:650; color:var(--text);}
+  .recipe .rm{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
+  .pantry{display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 14px;}
+  .serve-card{background:var(--card); border-radius:20px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:12px;}
+  .serve-hero{height:120px; display:flex; align-items:center; justify-content:center; font-size:54px;}
+  .serve-body{padding:14px 16px 16px;}
+  .serve-age{display:flex; gap:10px; margin-top:10px;}
+  .serve-age .s{flex:1; background:var(--elev); border-radius:14px; padding:11px 10px; text-align:center;}
+  .serve-age .s .a{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--accent); text-transform:uppercase;}
+  .serve-age .s .d{font-size:11.5px; color:var(--text2); margin-top:4px; line-height:1.35;}
+  .serve-age .s .p{font-size:24px; margin-top:2px;}
+  .age-seg{display:flex; gap:6px; margin:12px 0;}
+  .age-seg button{flex:1; border:none; font-family:inherit; cursor:pointer; text-align:center; font-size:12px;
+    padding:9px 2px; border-radius:999px; background:var(--elev); font-weight:700; color:var(--text2); transition:all .2s;}
+  .age-seg button.on{background:var(--accent); color:#fff;}
+
+  /* ── Развитие ── */
+  .rule{background:var(--card); border-radius:18px; padding:15px 16px; box-shadow:var(--shadow); margin-bottom:10px; display:flex; gap:12px;}
+  .rule .re{font-size:24px; flex:none;}
+  .rule b{font-size:14.5px; display:block;}
+  .rule p{font-size:12.5px; color:var(--text2); line-height:1.5; margin-top:4px;}
+  .game{background:var(--card); border-radius:18px; padding:15px 16px; box-shadow:var(--shadow); margin-bottom:10px;}
+  .game .row2{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;}
+  .leap{position:relative; padding-left:26px;}
+  .leap::before{content:""; position:absolute; left:8px; top:8px; bottom:8px; width:2px; background:var(--hairline); border-radius:2px;}
+  .l-item{position:relative; padding-bottom:16px;}
+  .l-item::before{content:""; position:absolute; left:-24px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--hairline); border:3px solid var(--bg);}
+  .l-item.done::before{background:var(--accent);}
+  .l-item.now::before{background:var(--terra); box-shadow:0 0 0 4px var(--terra-soft);}
+  .gtable{width:100%; border-collapse:collapse; font-size:13px;}
+  .gtable th{font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text2); text-align:left; padding:8px 6px; border-bottom:1px solid var(--hairline);}
+  .gtable td{padding:10px 6px; border-bottom:1px solid var(--hairline); font-variant-numeric:tabular-nums;}
+  .gtable tr:last-child td{border-bottom:none;}
+  .gtable .hl td{background:var(--accent-soft); font-weight:650;}
+  .gtable .hl td:first-child{border-radius:10px 0 0 10px;}
+  .gtable .hl td:last-child{border-radius:0 10px 10px 0;}
+  .dev-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
+  .dev-tile{border:none; border-radius:20px; padding:16px 15px; text-align:left; font-family:inherit; cursor:pointer; box-shadow:var(--shadow);
+    min-height:112px; display:flex; flex-direction:column; transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+  .dev-tile:active{transform:scale(.96);}
+  .dev-tile .he{font-size:28px;}
+  .dev-tile .hn{font-size:15px; font-weight:700; color:var(--text); margin-top:auto; letter-spacing:-.01em; line-height:1.25;}
+  .dev-tile .hc{font-size:11.5px; color:var(--text2); margin-top:3px;}
+  .check{display:flex; align-items:center; gap:12px; background:var(--card); border-radius:16px; padding:13px 15px;
+    box-shadow:var(--shadow); margin-bottom:9px; cursor:pointer; font-size:14.5px; font-weight:550;}
+  .check .box{width:24px; height:24px; border-radius:8px; border:2px solid var(--hairline); display:flex; align-items:center;
+    justify-content:center; color:transparent; font-size:13px; flex:none; transition:all .2s;}
+  .check.on .box{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .check .meta2{font-size:11.5px; color:var(--text2); font-weight:400; margin-top:2px;}
+  .check .cam{margin-left:auto; color:var(--text2); font-size:15px;}
+
+  /* ── Дневник ── */
+  .streak-flame{font-size:34px; animation:pulse 2.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.12);}}
+  .timeline{position:relative; padding-left:26px;}
+  .timeline::before{content:""; position:absolute; left:8px; top:8px; bottom:8px; width:2px; background:var(--hairline); border-radius:2px;}
+  .t-item{position:relative; padding-bottom:18px;}
+  .t-item::before{content:""; position:absolute; left:-24px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--accent); border:3px solid var(--bg);}
+  .t-item.terra::before{background:var(--terra);}
+  .t-item.sand::before{background:var(--sand);}
+  .t-date{font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text2);}
+  .t-card{background:var(--card); border-radius:16px; padding:13px 15px; box-shadow:var(--shadow); margin-top:7px;}
+  .t-card .tt{font-size:14.5px; font-weight:650; display:flex; gap:8px; align-items:center;}
+  .t-card .td{font-size:12.5px; color:var(--text2); margin-top:4px; line-height:1.45;}
+  .photo-ph{height:110px; border-radius:12px; margin-top:10px; display:flex; align-items:center; justify-content:center; font-size:40px; background:var(--elev);}
+  .ach-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .ach{background:var(--card); border-radius:16px; padding:13px 6px; text-align:center; box-shadow:var(--shadow);}
+  .ach .ae{font-size:28px;}
+  .ach .an{font-size:10.5px; font-weight:650; margin-top:6px; color:var(--text); line-height:1.3;}
+  .ach.locked{opacity:.42; filter:grayscale(.7);}
+  .growth-chart{width:100%; height:130px;}
+  .story-cover{border-radius:20px; overflow:hidden; position:relative; height:190px; margin-bottom:12px; cursor:pointer;
+    background:linear-gradient(140deg, var(--accent) 0%, var(--accent-deep) 60%, #47564D 100%); box-shadow:var(--shadow); color:#fff; padding:18px;
+    display:flex; flex-direction:column;}
+  .story-cover .mo{font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; opacity:.85;}
+  .story-cover h3{font-size:22px; font-weight:750; margin-top:6px; letter-spacing:-.01em;}
+  .story-cover .facts{margin-top:auto; font-size:13px; line-height:1.6; opacity:.95;}
+  .story-cover .play{position:absolute; right:16px; top:16px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.22);
+    display:flex; align-items:center; justify-content:center; font-size:16px; backdrop-filter:blur(6px);}
+
+  /* ── Здоровье / статы ── */
+  .stats{display:flex; gap:10px;}
+  .stat{flex:1; background:var(--card); border-radius:16px; padding:13px; box-shadow:var(--shadow); text-align:center;}
+  .stat .v{font-size:19px; font-weight:750; font-variant-numeric:tabular-nums;}
+  .stat .l{font-size:10.5px; color:var(--text2); margin-top:3px; letter-spacing:.03em;}
+  .tr-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
+  .tr{background:var(--card); border:none; border-radius:20px; padding:16px; box-shadow:var(--shadow); font-family:inherit; text-align:left;
+    cursor:pointer; transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+  .tr:active{transform:scale(.96);}
+  .tr .te{font-size:26px;}
+  .tr .tn{font-size:14.5px; font-weight:650; margin-top:8px; color:var(--text);}
+  .tr .tl{font-size:11.5px; color:var(--text2); margin-top:3px; line-height:1.4;}
+  .note{background:var(--card); border-radius:16px; padding:14px 16px; box-shadow:var(--shadow); font-size:13.5px; line-height:1.5;
+    color:var(--text); display:flex; gap:10px; margin-bottom:8px;}
+  .note .ne{flex:none;}
+  .note.alert{background:color-mix(in srgb, var(--danger) 9%, var(--card));}
+  .pill-note{display:inline-flex; align-items:center; gap:6px; background:var(--accent-soft); color:var(--accent); font-size:12.5px;
+    font-weight:700; border-radius:999px; padding:6px 12px; margin-top:8px;}
+  .section-t{font-size:12px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--text2); margin:22px 0 10px;}
+  .sos-step{background:color-mix(in srgb, var(--danger) 8%, var(--card)); border-radius:16px; padding:13px 15px; margin-bottom:9px; display:flex; gap:12px;}
+  .sos-step b{color:var(--danger); flex:none;}
+  .sos-step .tx{font-size:13.5px; line-height:1.5;}
+
+  /* ── AI-экран ── */
+  .ai-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
+  .ai-card{border:none; font-family:inherit; cursor:pointer; text-align:left;
+    background:var(--card); border-radius:18px; padding:15px 14px; box-shadow:var(--shadow);
+    font-size:13.5px; font-weight:650; color:var(--text); line-height:1.3; transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+  .ai-card:active{transform:scale(.95);}
+  .ai-card .ae2{width:40px; height:40px; border-radius:13px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:9px;}
+
+  /* ── Оверлеи ── */
+  .detail{position:absolute; inset:0; z-index:30; background:var(--bg); transform:translateX(105%);
+    transition:transform .42s cubic-bezier(.22,.9,.3,1); display:flex; flex-direction:column; border-radius:44px; overflow:hidden;}
+  .detail.open{transform:none;}
+  .detail-scroll{flex:1; overflow-y:auto; padding-bottom:120px; scrollbar-width:none;}
+  .detail-scroll::-webkit-scrollbar{display:none;}
+  .d-hero{height:210px; display:flex; align-items:center; justify-content:center; font-size:96px; position:relative;}
+  .d-hero span{filter:drop-shadow(0 16px 28px rgba(100,60,20,.28));}
+  .back{position:absolute; top:56px; left:16px; z-index:5; width:38px; height:38px; border-radius:50%;
+    background:color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter:blur(10px); border:none; cursor:pointer;
+    color:var(--text); font-size:17px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow);}
+  .d-body{padding:20px 20px 0;}
+  .d-body h2{font-size:26px; font-weight:750; letter-spacing:-.02em;}
+  .sub-head{padding:64px 20px 0;}
+  .sub-head .se{font-size:40px;}
+  .sub-head h2{font-size:26px; font-weight:750; letter-spacing:-.02em; margin-top:8px;}
+  .sub-head p{font-size:13.5px; color:var(--text2); margin-top:5px; line-height:1.5;}
+  .sub-body{padding:18px 20px 0;}
+  .serve{display:flex; gap:10px;}
+  .serve .s{flex:1; background:var(--card); border-radius:16px; padding:13px 12px; box-shadow:var(--shadow); text-align:center;}
+  .serve .s .e{font-size:26px;}
+  .serve .s .n{font-size:12.5px; font-weight:650; margin-top:6px;}
+  .serve .s .d{font-size:11px; color:var(--text2); margin-top:3px; line-height:1.35;}
+  .d-cta{position:absolute; left:0; right:0; bottom:0; padding:14px 20px 30px; display:flex; gap:10px;
+    background:linear-gradient(transparent, var(--bg) 40%);}
+
+  /* ── Правое меню ── */
+  .menu-btn{position:absolute; top:10px; right:20px; z-index:18; width:38px; height:38px; border-radius:50%;
+    background:color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter:blur(10px); border:none; cursor:pointer;
+    color:var(--text); font-size:16px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow);}
+  .drawer-scrim{position:absolute; inset:0; z-index:34; background:rgba(20,16,12,.4); opacity:0; pointer-events:none; transition:opacity .3s; border-radius:44px;}
+  .drawer-scrim.open{opacity:1; pointer-events:auto;}
+  .drawer{position:absolute; top:0; right:0; bottom:0; width:292px; z-index:35; background:var(--bg); box-shadow:var(--shadow-lg);
+    transform:translateX(105%); transition:transform .42s cubic-bezier(.22,.9,.3,1); border-radius:0 44px 44px 0;
+    padding:20px 14px 28px; overflow-y:auto; scrollbar-width:none;}
+  .drawer::-webkit-scrollbar{display:none;}
+  .drawer.open{transform:none;}
+  .sos{display:flex; align-items:center; gap:10px; width:100%; border:none; border-radius:14px; padding:14px; cursor:pointer;
+    font-family:inherit; font-weight:750; font-size:14.5px; color:#fff; background:var(--danger); margin-bottom:6px;}
+  .sos:active{filter:brightness(.92);}
+  .dr-sec{font-size:10.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--text2); margin:14px 6px 6px;}
+  .dr-item{display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; font-family:inherit; font-size:14.5px;
+    font-weight:600; color:var(--text); padding:9px 8px; border-radius:12px; cursor:pointer; text-align:left; transition:background .2s;}
+  .dr-item:active{background:var(--elev);}
+  .dr-item .de{width:24px; text-align:center; flex:none;}
+  .kid{display:flex; gap:11px; align-items:center; background:var(--accent-soft); border-radius:14px; padding:10px 12px; margin:0 4px 8px;}
+  .kid.ghost{background:var(--elev); cursor:pointer;}
+  .kid .ka{width:36px; height:36px; border-radius:50%; background:var(--sand-soft); display:flex; align-items:center; justify-content:center; font-size:17px; flex:none;}
+  .kid b{font-size:13.5px;}
+  .kid .sub{margin-top:0; font-size:11.5px;}
+
+  /* ── Профиль ── */
+  .prow{display:flex; align-items:center; gap:13px; padding:14px 2px; border-bottom:1px solid var(--hairline); font-size:15px; font-weight:550;}
+  .prow:last-child{border-bottom:none;}
+  .prow .pe{width:34px; height:34px; border-radius:11px; background:var(--elev); display:flex; align-items:center; justify-content:center; font-size:16px; flex:none;}
+  .prow .chev{margin-left:auto; color:var(--text2); font-size:14px;}
+  .plus-card{background:linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%); color:#fff; border-radius:20px; padding:20px; margin-bottom:12px; box-shadow:var(--shadow);}
+  :root[data-theme="dark"] .plus-card{background:linear-gradient(135deg,#5A6B5F 0%, #434F47 100%);}
+  .plus-card h3{font-size:18px; font-weight:750;}
+  .plus-card p{font-size:13px; opacity:.92; margin-top:6px; line-height:1.5;}
+  .plus-card .btn{background:#fff; color:var(--accent-deep); margin-top:14px; padding:12px;}
+  .fam{display:flex; gap:10px; margin-top:4px;}
+  .fam .f{flex:1; background:var(--card); border-radius:16px; padding:13px 8px; box-shadow:var(--shadow); text-align:center;}
+  .fam .f .fe{font-size:26px;}
+  .fam .f .fn{font-size:12px; font-weight:650; margin-top:5px;}
+  .fam .f .fr{font-size:10.5px; color:var(--text2); margin-top:2px;}
+
+  /* ── Пейволл ── */
+  .pay-benefit{display:flex; align-items:center; gap:11px; padding:7px 0; font-size:13.5px; line-height:1.4;}
+  .pay-benefit .pe2{font-size:19px; flex:none; width:26px; text-align:center;}
+  .pay-opt{display:flex; align-items:center; gap:10px; border:1.5px solid var(--hairline); border-radius:16px; padding:13px 15px;
+    margin-bottom:9px; cursor:pointer; background:var(--card); transition:all .2s;}
+  .pay-opt.on{border-color:var(--accent); background:var(--accent-soft);}
+  .pay-opt b{font-size:15px;}
+
+  /* ── Sheet / toast / confetti ── */
+  .scrim{position:absolute; inset:0; z-index:40; background:rgba(20,16,12,.4); opacity:0; pointer-events:none; transition:opacity .3s; border-radius:44px;}
+  .scrim.open{opacity:1; pointer-events:auto;}
+  .sheet{position:absolute; left:0; right:0; bottom:0; z-index:41; background:var(--card); border-radius:28px 28px 44px 44px;
+    padding:10px 20px 34px; transform:translateY(105%); transition:transform .42s cubic-bezier(.22,.9,.3,1); box-shadow:var(--shadow-lg);}
+  .sheet.open{transform:none;}
+  .grab{width:38px; height:5px; border-radius:99px; background:var(--hairline); margin:4px auto 14px;}
+  .sheet h3{font-size:17px; font-weight:700; margin-bottom:14px;}
+  .status-opt{display:flex; align-items:center; gap:12px; width:100%; background:none; border:none; font-family:inherit; font-size:15px;
+    font-weight:550; color:var(--text); padding:12px 6px; border-radius:14px; cursor:pointer; transition:background .2s;}
+  .status-opt:active{background:var(--elev);}
+  .status-opt .se{font-size:20px; width:30px;}
+  .status-opt .sd{margin-left:auto;}
+  .rec-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:9px;}
+  .rec-grid button{border:none; font-family:inherit; cursor:pointer; background:var(--elev); border-radius:15px;
+    padding:11px 4px; text-align:center; font-size:10.5px; font-weight:600; color:var(--text); transition:transform .15s;}
+  .rec-grid button:active{transform:scale(.93);}
+  .rec-grid button span{display:block; font-size:21px; margin-bottom:3px;}
+  .sheet .hint{text-align:center; font-size:12px; color:var(--text2); margin-top:14px;}
+  .toast{position:absolute; left:20px; right:20px; bottom:110px; z-index:50; background:var(--card); border-radius:18px; padding:14px 16px;
+    box-shadow:var(--shadow-lg); display:flex; align-items:center; gap:12px; transform:translateY(24px); opacity:0; pointer-events:none;
+    transition:all .38s cubic-bezier(.34,1.4,.64,1);}
+  .toast.show{transform:none; opacity:1;}
+  .toast.show .te2{animation:popEmoji .7s cubic-bezier(.34,1.8,.5,1);}
+  .toast .te2{font-size:26px;}
+  @keyframes popEmoji{0%{transform:scale(0) rotate(-30deg);} 70%{transform:scale(1.25) rotate(6deg);} 100%{transform:scale(1) rotate(0);}}
+  .toast .tt2{font-size:14px; font-weight:650;}
+  .toast .td2{font-size:12px; color:var(--text2); margin-top:1px;}
+  .confetti-zone{position:absolute; inset:0; z-index:60; pointer-events:none; overflow:hidden; border-radius:44px;}
+  .cf{position:absolute; font-size:20px; animation:fall 1.6s cubic-bezier(.2,.6,.4,1) forwards;}
+  @keyframes fall{0%{transform:translateY(-30px) rotate(0) scale(.6); opacity:0;} 12%{opacity:1;}
+    100%{transform:translateY(560px) rotate(340deg) scale(1); opacity:0;}}
+
+  .footer-note{font-size:12px; color:var(--text2); text-align:center; max-width:460px; line-height:1.6;}
+  @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.001s !important; transition-duration:.001s !important;} }
+  @media (max-width:430px){ .phone{height:760px;} body{padding:16px 8px 40px;} }
+</style>
+
+<div class="intro">
+  <div class="brand">bubka · Прототип v0.7</div>
+  <h1>Четыре раздела и кнопка ✦</h1>
+  <p>Финальная палитра: серо-бежевый стейдж, молочная поверхность, шалфей и песок — в светлой и тёплой тёмной теме. Внутри: онбординг, hero «Сейчас» с дугой окна бодрствования, журнал дня с редактированием, «Забота о маме», рецепты по шагам и полный календарь прививок.</p>
+  <div class="hints">
+    <span class="hint">✦ AI-карточки по центру</span>
+    <span class="hint">🍌 Подача по 4 возрастам</span>
+    <span class="hint">🧺 Рецепты из «что дома»</span>
+    <span class="hint">☰ Дети · SOS · Premium</span>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="screen-wrap">
+    <div class="statusbar">
+      <span class="num">9:41</span>
+      <div class="island"></div>
+      <span style="letter-spacing:1px">●●●● ⌁ 87%</span>
+    </div>
+
+    <div class="screens">
+      <button class="menu-btn" onclick="openDrawer()" aria-label="Меню">☰</button>
+
+      <!-- ═══ МЕНЮ ═══ -->
+      <div class="drawer-scrim" id="dscrim" onclick="closeDrawer()"></div>
+      <div class="drawer" id="drawer">
+        <button class="sos" onclick="closeDrawer();openSOS('choke')"><span style="font-size:18px">🚨</span>SOS · Экстренные инструкции</button>
+        <div class="dr-sec">Дети</div>
+        <div class="kid"><div class="ka" id="dr-kid-ava">👶</div><div class="grow"><b id="dr-kid-name">Миша</b><div class="sub" id="dr-kid-age">6 мес 12 дней</div></div><span class="tag green">✓</span></div>
+        <div class="kid ghost" onclick="toast('👶','Профили детей','Без ограничений и бесплатно — мамы двойняшек нам дороги')"><div class="ka">＋</div><div class="grow"><b>Добавить малыша</b></div></div>
+        <div class="dr-sec">Семья</div>
+        <button class="dr-item" onclick="closeDrawer();showScreen('scr-profile')"><span class="de">👨‍👩‍👧</span>Семейный доступ · папа подключён</button>
+        <button class="dr-item" onclick="toast('🔗','Передача смены','Ссылка для бабушки скопирована — без установки приложения')"><span class="de">🔗</span>Передача смены</button>
+        <div class="dr-sec">Полезное</div>
+        <button class="dr-item" onclick="drSeg('scr-dev','pg-dv-diary')"><span class="de">🎞</span>Дневник малыша · альбом</button>
+        <button class="dr-item" onclick="drSeg('scr-dev','pg-dv-checks')"><span class="de">📋</span>Чек-листы по возрасту</button>
+        <button class="dr-item" onclick="closeDrawer();openJournal()"><span class="de">📖</span>Журнал записей</button>
+        <button class="dr-item" onclick="closeDrawer();openPaywall()"><span class="de">✨</span>bubka+ · 7 дней бесплатно</button>
+        <button class="dr-item" onclick="closeDrawer();showScreen('scr-profile')"><span class="de">⚙️</span>Настройки и профиль</button>
+        <button class="dr-item" onclick="toast('💌','Обратная связь','Спасибо! Мы читаем каждое письмо')"><span class="de">💬</span>Обратная связь</button>
+      </div>
+
+      <!-- ═══ 1 · СЕГОДНЯ ═══ -->
+      <div class="screen active" id="scr-home">
+        <div class="greet rise" style="padding-right:44px">
+          <div class="avatar" id="kid-avatar" onclick="showScreen('scr-profile')">👶</div>
+          <div class="grow">
+            <h2 id="greet-line">Доброе утро ☀️</h2>
+            <div class="age" id="kid-line">Миша · 6 месяцев и 12 дней</div>
+          </div>
+          <button class="chip" id="head-weather" onclick="openInfo('weather')" style="flex:none">🌤 +4°</button>
+        </div>
+
+        <!-- HERO «сейчас»: mini по умолчанию, разворачивается когда сон важен -->
+        <div class="hero-now rise mini" id="hero-now">
+          <div class="top">
+            <div class="grow">
+              <div class="state" id="sleep-label">Бодрствует</div>
+              <div class="big-time" id="sleep-time">1:50</div>
+              <div class="until" id="sleep-hint">Окно сна в <b>12:40</b> · через ~50 мин</div>
+            </div>
+            <svg class="arc" viewBox="0 0 96 96">
+              <circle class="track2" cx="48" cy="48" r="34"></circle>
+              <circle class="prog2" cx="48" cy="48" r="34"></circle>
+              <text x="48" y="59" text-anchor="middle" class="arc-moon">🌙</text>
+            </svg>
+            <button class="sleep-mini-btn" id="sleep-btn-sm" onclick="toggleSleep()">Сон ▶</button>
+          </div>
+          <button class="btn btn-dusk" id="sleep-btn" onclick="toggleSleep()">Начать сон</button>
+          <!-- текст зависит от данных: беспокойная ночь → «разобраться»; всё хорошо → «✦ Сон в норме · ритм стабильный» -->
+          <button class="btn" id="sleep-ai" style="margin-top:8px; padding:11px; background:color-mix(in srgb, var(--card) 65%, transparent); color:var(--dusk); font-size:13.5px" onclick="openAI('sleep')">✦ Анализ сна · ночь была беспокойной ›</button>
+        </div>
+
+        <!-- День в цифрах → журнал -->
+        <div class="sec-head rise"><b>День в цифрах</b><span id="glance-note" onclick="openJournal()" style="cursor:pointer; color:var(--accent); font-weight:700">журнал ›</span></div>
+        <div class="glance rise" id="glance">
+          <button onclick="openJournal()"><div class="ge">😴</div><div class="gv">2:40</div><div class="gl">сон</div></button>
+          <button onclick="openJournal()"><div class="ge">🥣</div><div class="gv">2</div><div class="gl">еда</div></button>
+          <button onclick="openJournal()"><div class="ge">💧</div><div class="gv">90</div><div class="gl">мл воды</div></button>
+          <button onclick="openJournal()"><div class="ge">🩲</div><div class="gv">4</div><div class="gl">подгуз.</div></button>
+        </div>
+
+        <!-- Быстрая запись -->
+        <div class="quick rise">
+          <button id="quick-feed" onclick="toast('🥣','Кормление записано','Обед · тыква, 40 г');agendaDone('ag-feed')"><span class="qe">🥣</span>Кормление<span class="ago">· 2 ч 5 м</span></button>
+          <button onclick="toast('🩲','Подгузник','Записано')"><span class="qe">🩲</span>Подгузник<span class="ago">· 45 м</span></button>
+          <button onclick="toast('💧','Вода добавлена','+30 мл · всего 120 мл')"><span class="qe">💧</span>Вода<span class="ago">· 1 ч 20 м</span></button>
+          <button onclick="toast('📷','Фото сохранено','Добавлено в дневник')"><span class="qe">📷</span>Фото</button>
+          <button onclick="openRecords()"><span class="qe">➕</span>Все записи</button>
+        </div>
+
+        <!-- Дальше по плану -->
+        <div class="sec-head rise"><b>Дальше</b><span>план на сегодня</span></div>
+        <div class="agenda rise">
+          <div class="ag-row next" id="ag-feed" onclick="openFood('pumpkin')">
+            <div class="at">12:10</div><div class="ae">🎃</div>
+            <div class="grow"><div class="an">Обед: тыква, день 2</div><div class="as">как подать безопасно ›</div></div>
+            <span class="tag green">скоро</span>
+          </div>
+          <div class="ag-row" id="ag-sleep" onclick="toast('😴','Сон 2','Ориентир 13:40 · подскажем по признакам усталости')">
+            <div class="at">13:40</div><div class="ae">😴</div>
+            <div class="grow"><div class="an">Второй сон · ~1,5 ч</div></div>
+            <span class="chev">›</span>
+          </div>
+          <div class="ag-row" id="ag-walk" onclick="openInfo('game')">
+            <div class="at">16:30</div><div class="ae">🧸</div>
+            <div class="grow"><div class="an">Прогулка + «Где мишка?»</div><div class="as">игра дня · 5 минут</div></div>
+            <span class="chev">›</span>
+          </div>
+        </div>
+
+        <!-- Лента: карусель. data-int — тема карточки; после онбординга остаются только выбранные темы -->
+        <div class="sec-head rise"><b>Сегодня с малышом</b><span id="car-count">6 карточек · 1 минута</span></div>
+        <div class="carousel rise" id="carousel">
+          <button class="c-card tinted-sand" data-int="always" onclick="openInfo('weather')">
+            <div class="ce">🌤️</div>
+            <div class="ck2" style="color:var(--warn)">Как одеть · +4°</div>
+            <div class="cn">Боди, комбинезон, шапка</div>
+            <div class="cs" id="car-weather-sub">Прохладнее, чем вчера — возьмите плед</div>
+          </button>
+          <button class="c-card tinted-terra" data-int="dev" onclick="openInfo('leap')">
+            <div class="ce">🧠</div>
+            <div class="ck2" style="color:var(--terra)">В развитии</div>
+            <div class="cn">Учится сидеть и «изучает» расстояние</div>
+            <div class="cs">Тревожится без вас — норма 5-го скачка</div>
+          </button>
+          <button class="c-card tinted-accent" data-int="dev" onclick="openInfo('game')">
+            <div class="ce">🎯</div>
+            <div class="ck2" style="color:var(--accent)">Игра дня</div>
+            <div class="cn">«Где спрятался мишка?»</div>
+            <div class="cs">Постоянство объекта · 5 минут · без инвентаря</div>
+          </button>
+          <button class="c-card tinted-accent" data-int="food" onclick="openInfo('foodidea')">
+            <div class="ce">🫘</div>
+            <div class="ck2" style="color:var(--accent)">Идея прикорма</div>
+            <div class="cn">Чечевица — пора познакомиться</div>
+            <div class="cs">В меню давно нет железа · рецепт внутри</div>
+          </button>
+          <button class="c-card" data-int="health" onclick="openInfo('vax')">
+            <div class="ce">💉</div>
+            <div class="ck2" style="color:var(--text2)">Через 12 дней</div>
+            <div class="cn">Прививка · визит 6 мес</div>
+            <div class="cs">18 июля · и пора измерить рост</div>
+          </button>
+          <button class="c-card tinted-dusk" data-int="always" onclick="openInfo('tip')">
+            <div class="ce">❤️</div>
+            <div class="ck2" style="color:var(--dusk)">Совет</div>
+            <div class="cn">День открытой кружки</div>
+            <div class="cs">Пара глотков воды — и фото на память</div>
+          </button>
+          <button class="c-card tinted-sand" data-int="mom" style="display:none" onclick="openInfo('mom')">
+            <div class="ce">💛</div>
+            <div class="ck2" style="color:var(--sand)">Для мамы</div>
+            <div class="cn">Минутка для себя</div>
+            <div class="cs">Малыш уснёт — 4 минуты только ваши</div>
+          </button>
+        </div>
+        <button class="btn btn-soft rise" id="evening-btn" onclick="openEvening()" style="display:none">🌙 Итог дня готов — посмотреть</button>
+        <div class="sub rise" style="text-align:center; padding:10px 0 6px">Это всё на сегодня — лента конечная 🤍</div>
+        <button class="rise" onclick="cycleDay()" id="daycycle" style="display:block; margin:0 auto; border:none; background:none; font-family:inherit; font-size:12px; font-weight:650; color:var(--text2); cursor:pointer; padding:6px 12px">🌗 Демо: сейчас «день» — показать вечер ›</button>
+      </div>
+
+      <!-- ═══ 2 · ПИТАНИЕ ═══ -->
+      <div class="screen" id="scr-food">
+        <div class="rise" style="padding-top:10px; margin-bottom:10px">
+          <h2 class="h-screen">Питание</h2>
+          <div class="sub">Прикорм по линии ВОЗ и ESPGHAN · проверено педиатром</div>
+        </div>
+        <div class="segs rise">
+          <button class="chip on" data-pg="pg-fd-products" onclick="seg(this,'pg-fd-products')">🥑 Прикорм</button>
+          <button class="chip" data-pg="pg-fd-recipes" onclick="seg(this,'pg-fd-recipes')">🍲 Рецепты</button>
+          <button class="chip" data-pg="pg-fd-safety" onclick="seg(this,'pg-fd-safety')">🛡 Безопасность</button>
+          <button class="chip" data-pg="pg-fd-plan" onclick="seg(this,'pg-fd-plan')">🗓 План</button>
+        </div>
+
+        <div class="subpage on" id="pg-fd-products">
+          <input class="search" id="food-search" placeholder="Найти продукт: манго, яйцо, брокколи…" oninput="renderFoodGrid()">
+          <div class="chips-row" id="food-cats"></div>
+          <div class="food-grid" id="food-grid"></div>
+          <div class="note" style="margin-top:12px"><span class="ne">🌈</span><span>Введено <b>10 из 120</b> продуктов. Внутри каждого — подача по возрасту с картинками, как в Baby Plates.</span></div>
+        </div>
+
+        <div class="subpage" id="pg-fd-recipes">
+          <div class="eyebrow" style="margin-bottom:8px">Что есть дома? Отметьте — подберём</div>
+          <div class="pantry" id="pantry"></div>
+          <div id="recipe-list"></div>
+          <div class="card tinted-accent" onclick="openPaywall()" style="cursor:pointer">
+            <div class="row"><div class="emoji-lg">✨</div><div class="grow"><div class="h-card" style="margin:0">Ещё 150+ рецептов в bubka+</div><div class="sub">С фильтрами по аллергенам и списком покупок</div></div><span style="color:var(--text2)">›</span></div>
+          </div>
+        </div>
+
+        <div class="subpage" id="pg-fd-safety">
+          <div class="note alert" style="margin-bottom:12px"><span class="ne">🚨</span><span><b>Главное правило:</b> малыш ест только сидя, только под присмотром, без игр и мультиков.</span></div>
+          <div class="rule"><span class="re">🍇</span><div><b>Виноград и черри — только вдоль на 4 части</b><p>Круглое и скользкое — самая частая причина удушья до 4 лет.</p></div></div>
+          <div class="rule"><span class="re">🥜</span><div><b>Орехи — только пастой</b><p>Цельные орехи запрещены до 4–5 лет. Пасту — тонким слоем, как аллерген.</p></div></div>
+          <div class="rule"><span class="re">🍯</span><div><b>Мёд — строго после 12 месяцев</b><p>Риск детского ботулизма. Ни в каше, ни «на кончике ложки».</p></div></div>
+          <div class="rule"><span class="re">🧂</span><div><b>Без соли и сахара до года</b><p>Почки не готовы к соли, сахар формирует привычки на всю жизнь.</p></div></div>
+          <div class="rule"><span class="re">😮</span><div><b>Рвотный рефлекс ≠ удушье</b><p>Кряхтит и краснеет — рефлекс работает. Тихий и синеет — удушье: приёмы первой помощи и 103.</p></div></div>
+          <div class="rule"><span class="re">🗓</span><div><b>Правило 3 дней для аллергенов</b><p>Новый аллерген — утром, малыми дозами, 3 дня подряд.</p></div></div>
+          <div class="note" style="cursor:pointer" onclick="openSOS('choke')"><span class="ne">🎓</span><span><b>Мини-курс:</b> «Первая помощь при удушье» — 4 минуты. Посмотрите до первого прикорма ›</span></div>
+        </div>
+
+        <div class="subpage" id="pg-fd-plan">
+          <div class="card tinted-accent">
+            <div class="eyebrow" style="color:var(--accent)">План прикорма · bubka+ ✨</div>
+            <div class="h-card">Неделя 3: знакомимся с жёлтыми овощами</div>
+            <div class="sub" style="margin-top:6px">Пн — тыква · Вт — тыква + овсянка · Ср — новое: кукуруза… План учитывает, что уже введено, и напоминает повторять продукты. Новое — раз в 2–3 дня и утром.</div>
+            <button class="btn btn-primary" style="margin-top:12px" onclick="openPaywall()">Открыть план · 7 дней бесплатно</button>
+          </div>
+          <div class="card">
+            <div class="eyebrow" style="margin-bottom:8px">Чек-лист аллергенов · 3 из 9</div>
+            <div class="meal-line"><div class="t">✓</div><div class="grow"><b style="font-size:14px">🥚 Яйцо</b><div class="sub">Введено · реакции нет</div></div></div>
+            <div class="meal-line"><div class="t">✓</div><div class="grow"><b style="font-size:14px">🌾 Глютен</b><div class="sub">Введено · реакции нет</div></div></div>
+            <div class="meal-line"><div class="t">→</div><div class="grow"><b style="font-size:14px">🥜 Арахис</b><div class="sub">Следующий · пастой, утром, правило 3 дней</div></div></div>
+          </div>
+          <button class="btn btn-soft" onclick="toast('🛒','Список покупок','Собран из плана недели — 12 позиций')">Список покупок из плана</button>
+        </div>
+      </div>
+
+      <!-- ═══ 3 · РАЗВИТИЕ ═══ -->
+      <div class="screen" id="scr-dev">
+        <div class="rise" style="padding-top:10px; margin-bottom:10px">
+          <h2 class="h-screen">Развитие</h2>
+          <div class="sub">Что интересно Мише сейчас — карточками, не статьями</div>
+        </div>
+        <div class="segs rise">
+          <button class="chip on" data-pg="pg-dv-today" onclick="seg(this,'pg-dv-today')">🎯 Сегодня</button>
+          <button class="chip" data-pg="pg-dv-months" onclick="seg(this,'pg-dv-months')">🗓 Возраст</button>
+          <button class="chip" data-pg="pg-dv-leaps" onclick="seg(this,'pg-dv-leaps')">📈 Скачки</button>
+          <button class="chip" data-pg="pg-dv-skills" onclick="seg(this,'pg-dv-skills')">✅ Умелки</button>
+          <button class="chip" data-pg="pg-dv-diary" onclick="seg(this,'pg-dv-diary')">🎞 Дневник</button>
+        </div>
+
+        <div class="subpage on" id="pg-dv-today">
+          <div class="dev-grid">
+            <button class="dev-tile tinted-accent" onclick="seg(document.querySelector('[data-pg=pg-dv-skills]'),'pg-dv-skills')"><div class="he">🧩</div><div class="hn">Навыки</div><div class="hc">что осваивает · отметить умелку</div></button>
+            <button class="dev-tile tinted-terra" onclick="toast('🎲','Игры на сегодня','«Где мишка?» · корзина сокровищ · перекличка слогов')"><div class="he">🎲</div><div class="hn">Игры</div><div class="hc">1–3 на сегодня</div></button>
+            <button class="dev-tile tinted-sand" onclick="toast('🧸','Игрушки 6–7 мес','Стаканчики-вкладыши · мягкие кубики · зеркальце. Без хлама.')"><div class="he">🧸</div><div class="hn">Игрушки</div><div class="hc">что действительно нужно</div></button>
+            <button class="dev-tile tinted-dusk" onclick="toast('📚','Книги 6–7 мес','Картонки с крупными картинками · потешки с ритмом')"><div class="he">📚</div><div class="hn">Книги</div><div class="hc">что читать сейчас</div></button>
+          </div>
+          <div class="game"><b style="font-size:15px">🧸 Где спрятался мишка?</b>
+            <p class="sub">Накройте игрушку платком на глазах у малыша и спросите «где мишка?». Снимите платок — «вот он!»</p>
+            <div class="row2"><span class="tag green">постоянство объекта</span><span class="tag">5 мин</span><span class="tag">без инвентаря</span></div></div>
+          <div class="game"><b style="font-size:15px">🧺 Корзина сокровищ · Montessori</b>
+            <p class="sub">Деревянная ложка, лоскут льна, силиконовая щётка — малыш исследует текстуры сам, вы рядом.</p>
+            <div class="row2"><span class="tag terra">сенсорика</span><span class="tag">10 мин</span></div></div>
+          <div class="game"><b style="font-size:15px">🤸 Упражнение: тянемся к игрушке</b>
+            <p class="sub">Кладите игрушку чуть дальше вытянутой руки — стимул для подготовки к ползанию. После купания — лёгкий массаж спинки.</p>
+            <div class="row2"><span class="tag dusk">моторика</span><span class="tag">5 мин</span></div></div>
+          <div class="note"><span class="ne">💡</span><span>«Развивающие» гаджеты с экраном до года не рекомендованы ВОЗ. Лучшая игрушка — ваше лицо и голос.</span></div>
+        </div>
+
+        <div class="subpage" id="pg-dv-months">
+          <div class="card">
+            <div class="eyebrow" style="margin-bottom:6px">6–7 месяцев · сейчас</div>
+            <div class="meal-line"><div class="t">🏃</div><div class="grow"><b style="font-size:14px">Моторика</b><div class="sub">Сидит с опорой → без опоры · перевороты в обе стороны · подготовка к ползанию</div></div></div>
+            <div class="meal-line"><div class="t">🗣</div><div class="grow"><b style="font-size:14px">Речь</b><div class="sub">Цепочки слогов «ба-ба», «ма-ма» (пока без смысла) · отзывается на имя</div></div></div>
+            <div class="meal-line"><div class="t">🖐</div><div class="grow"><b style="font-size:14px">Сенсорика</b><div class="sub">Перекладывает из руки в руку · тянет всё в рот — это норма исследования</div></div></div>
+          </div>
+          <div class="note"><span class="ne">🩺</span><span><b>Когда обсудить с врачом:</b> к 7 мес не переворачивается совсем, не реагирует на звуки, не удерживает голову. Спокойно: диапазон нормы очень широкий.</span></div>
+          <div class="card">
+            <div class="eyebrow" style="margin-bottom:8px">Нормы сна · выделен возраст Миши</div>
+            <table class="gtable">
+              <tr><th>Возраст</th><th>Бодрств.</th><th>Дн. сны</th><th>Ночь</th></tr>
+              <tr><td>4–5 мес</td><td>1,5–2 ч</td><td>3–4</td><td>10–11 ч</td></tr>
+              <tr class="hl"><td>6–7 мес</td><td>2–2,5 ч</td><td>2–3</td><td>10–11 ч</td></tr>
+              <tr><td>8–10 мес</td><td>2,5–3 ч</td><td>2</td><td>10–12 ч</td></tr>
+              <tr><td>11–14 мес</td><td>3–4 ч</td><td>1–2</td><td>10–12 ч</td></tr>
+            </table>
+          </div>
+          <div class="card tinted-accent" onclick="toast('📊','А как у других?','68% малышей в 6–7 мес всё ещё просыпаются ночью. Вы не одни 💚')" style="cursor:pointer">
+            <div class="row"><div class="emoji-lg">📊</div><div class="grow"><div class="h-card" style="margin:0">А как у других?</div><div class="sub">Анонимная статистика малышей того же возраста</div></div><span style="color:var(--text2)">›</span></div>
+          </div>
+        </div>
+
+        <div class="subpage" id="pg-dv-leaps">
+          <div class="leap">
+            <div class="l-item done"><div class="t-date">Скачок 4 · ~19 недель ✓</div>
+              <div class="t-card"><div class="tt">Мир событий</div><div class="td">Понимает последовательности: «сейчас будет кормление».</div></div></div>
+            <div class="l-item now"><div class="t-date" style="color:var(--terra)">Скачок 5 · ~26 недель · сейчас</div>
+              <div class="t-card"><div class="tt">Мир взаимосвязей</div><div class="td">Понимает расстояние: «мама ушла — мама далеко». Отсюда тревога разлуки, капризы и плохой сон. Это норма и это пройдёт. Помогает: больше контакта, прятки, предсказуемый режим.</div></div></div>
+            <div class="l-item"><div class="t-date">Скачок 6 · ~37 недель</div>
+              <div class="t-card"><div class="tt">Мир категорий</div><div class="td">Начнёт группировать: «это еда, это животные». Появятся «исследования» — крошение, бросание.</div></div></div>
+          </div>
+          <div class="note"><span class="ne">📈</span><span>Календарь скачков — ориентир, не приговор: сроки индивидуальны, теория обсуждается и не является медицинским стандартом. Для недоношенных считаем от ПДР.</span></div>
+        </div>
+
+        <div class="subpage" id="pg-dv-skills">
+          <div class="pill-note" style="margin-top:0; margin-bottom:12px">✅ Дневник умелок · 2 из 6 в этом возрасте</div>
+          <div id="skill-list"></div>
+          <div class="note"><span class="ne">📷</span><span>Каждая умелка — карточка: дата, фото, видео, заметка. Из них сам собирается дневник и альбом.</span></div>
+        </div>
+
+        <div class="subpage" id="pg-dv-diary">
+          <div class="card">
+            <div class="row">
+              <div class="streak-flame">🔥</div>
+              <div class="grow">
+                <div class="h-card" style="margin:0"><span class="num">7 дней</span> с bubka</div>
+                <div class="sub">Пропустите день — стрик просто подождёт вас 🤍</div>
+              </div>
+            </div>
+          </div>
+          <div class="timeline">
+            <div class="t-item terra">
+              <div class="t-date">Сегодня</div>
+              <div class="t-card"><div class="tt">🎃 Первая проба: тыква</div><div class="td">Съел 40 г и стучал ложкой — требовал добавку.</div></div>
+            </div>
+            <div class="t-item sand">
+              <div class="t-date">5 июля</div>
+              <div class="t-card"><div class="tt">🌟 Перевернулся · 📏 рост · 🥒 первый кабачок</div><div class="td">Насыщенный день: переворот со спины на живот, 67 см, и кабачок зашёл на ура.</div>
+                <div class="photo-ph">📷</div></div>
+            </div>
+            <div class="t-item">
+              <div class="t-date">28 июня</div>
+              <div class="t-card"><div class="tt">🥦 Первая проба: брокколи</div><div class="td">Скривился, но проглотил. Засчитано!</div></div>
+            </div>
+          </div>
+          <div class="story-cover" onclick="openPaywall()">
+            <div class="play">▶</div>
+            <div class="mo">История месяца · bubka+ ✨</div>
+            <h3>Июнь Миши</h3>
+            <div class="facts">4 новых продукта · научился переворачиваться · +2 см<br>AI собрал 26 фото и 14 событий в Stories</div>
+          </div>
+          <div class="card tinted-sand" onclick="openPaywall()" style="cursor:pointer">
+            <div class="row">
+              <div class="emoji-lg">📕</div>
+              <div class="grow">
+                <div class="h-card" style="margin:0">Книга «Первый год малыша»</div>
+                <div class="sub">Весь дневник — в красивый альбом: фото, даты, рост и вес. PDF сейчас, печать — скоро.</div>
+              </div>
+              <span style="color:var(--text2)">›</span>
+            </div>
+          </div>
+          <div class="section-t">Достижения</div>
+          <div class="ach-grid">
+            <div class="ach"><div class="ae">🥄</div><div class="an">Первая ложка</div></div>
+            <div class="ach"><div class="ae">🌈</div><div class="an">10 продуктов</div></div>
+            <div class="ach"><div class="ae">🔥</div><div class="an">Неделя вместе</div></div>
+            <div class="ach locked"><div class="ae">🥇</div><div class="an">25 овощей</div></div>
+            <div class="ach locked"><div class="ae">🛡</div><div class="an">Все аллергены</div></div>
+            <div class="ach locked"><div class="ae">💯</div><div class="an">100 приёмов пищи</div></div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="card tinted-dusk" onclick="toast('💌','Письмо в будущее','Капсула откроется в 18 лет. Первое письмо сохранено 🤍')" style="cursor:pointer">
+            <div class="row"><div class="emoji-lg">💌</div><div class="grow"><div class="h-card" style="margin:0">Письмо в будущее</div><div class="sub">Напишите Мише письмо — он прочитает его в 18 лет</div></div><span style="color:var(--text2)">›</span></div>
+          </div>
+        </div>
+
+        <div class="subpage" id="pg-dv-checks">
+          <div class="pill-note" style="margin-top:0; margin-bottom:12px">✅ К 6 месяцам · готово 2 из 5</div>
+          <div class="check on" onclick="toggleCheck(this)"><div class="box">✓</div><span class="txt grow">Купить поильник</span></div>
+          <div class="check on" onclick="toggleCheck(this)"><div class="box">✓</div><span class="txt grow">Опустить дно кроватки</span></div>
+          <div class="check" onclick="toggleCheck(this)"><div class="box">✓</div><span class="txt grow">Начать кусочки — мягкие «пальчики»</span></div>
+          <div class="check" onclick="toggleCheck(this)"><div class="box">✓</div><span class="txt grow">Закрыть розетки заглушками</span></div>
+          <div class="check" onclick="toggleCheck(this)"><div class="box">✓</div><span class="txt grow">Убрать мелкие предметы ниже метра</span></div>
+          <div class="section-t">Скоро · к 8 месяцам</div>
+          <div class="check" onclick="toggleCheck(this)"><div class="box">✓</div><span class="txt grow">Накладки на углы, блокираторы ящиков</span></div>
+          <div class="check" onclick="toggleCheck(this)"><div class="box">✓</div><span class="txt grow">Закрепить комод и стеллажи к стене</span></div>
+          <div class="note" style="margin-top:12px"><span class="ne">💡</span><span>Чек-лист обновляется сам: новый возраст — новые пункты. Выполненные уходят в дневник.</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ 4 · ЗДОРОВЬЕ ═══ -->
+      <div class="screen" id="scr-health">
+        <div class="rise" style="padding-top:10px; margin-bottom:10px">
+          <h2 class="h-screen">Здоровье</h2>
+          <div class="sub">Бесплатно навсегда · работает офлайн · проверено педиатром</div>
+        </div>
+        <div class="segs rise">
+          <button class="chip on" data-pg="pg-hl-vax" onclick="seg(this,'pg-hl-vax')">💉 Прививки</button>
+          <button class="chip" data-pg="pg-hl-grow" onclick="seg(this,'pg-hl-grow')">📏 Рост</button>
+          <button class="chip" data-pg="pg-hl-state" onclick="seg(this,'pg-hl-state')">🩹 Состояние</button>
+          <button class="chip" data-pg="pg-hl-kit" onclick="seg(this,'pg-hl-kit')">💊 Аптечка</button>
+          <button class="chip" data-pg="pg-hl-sos" onclick="seg(this,'pg-hl-sos')">🚨 SOS</button>
+        </div>
+
+        <div class="subpage on" id="pg-hl-vax">
+          <div class="pill-note" style="margin-top:0; margin-bottom:10px">💉 Национальный календарь РФ · Мише 6 мес 12 дней</div>
+          <div class="note"><span class="ne">🧬</span><span><b>Почему график именно такой:</b> каждую прививку ставят в возрасте, когда материнские антитела угасают, а риск болезни растёт.</span></div>
+          <div class="section-t">Сейчас · визит в 6 месяцев</div>
+          <div class="card">
+            <div class="eyebrow" style="margin-bottom:6px">План: 18 июля · напомним за 3 дня и накануне</div>
+            <div class="meal-line"><div class="t">💉</div><div class="grow"><b style="font-size:14px">АКДС (V3) <span class="tag green">обязательная</span></b><div class="sub">Третья доза завершает базовую защиту — до неё иммунитет неполный.</div></div></div>
+            <div class="meal-line"><div class="t">💉</div><div class="grow"><b style="font-size:14px">Полиомиелит ИПВ (V3) <span class="tag green">обязательная</span></b><div class="sub">Инактивированная (не живая) вакцина.</div></div></div>
+            <div class="meal-line"><div class="t">💉</div><div class="grow"><b style="font-size:14px">Гепатит B (V3) <span class="tag green">обязательная</span></b><div class="sub">Завершает курс из трёх доз — защита на десятилетия.</div></div></div>
+            <div class="meal-line"><div class="t">💉</div><div class="grow"><b style="font-size:14px">Hib (V3) <span class="tag green">обязательная</span></b><div class="sub">Защита от тяжёлых менингитов и пневмоний до 5 лет.</div></div></div>
+            <div class="row" style="gap:10px; margin-top:12px" id="vax-actions">
+              <button class="btn btn-primary" style="flex:1.4" onclick="vaxDone()">Сделали ✓</button>
+              <button class="btn btn-soft" style="flex:1" onclick="vaxDelay()">Перенести</button>
+            </div>
+            <div class="sub" style="margin-top:10px">Все 4 вакцины можно ставить в один день — это безопасно.</div>
+          </div>
+          <div class="section-t">Уже сделано ✓</div>
+          <div class="card">
+            <div class="meal-line"><div class="t">4,5 мес</div><div class="grow"><b style="font-size:14px">АКДС (V2) · Полио (V2) · Hib (V2) · Пневмококк (V2)</b><div class="sub">15 мая · реакции не было</div></div><span class="tag green">✓</span></div>
+            <div class="meal-line"><div class="t">3 мес</div><div class="grow"><b style="font-size:14px">АКДС (V1) · Полио (V1) · Hib (V1)</b><div class="sub">28 марта</div></div><span class="tag green">✓</span></div>
+            <div class="meal-line"><div class="t">2 мес</div><div class="grow"><b style="font-size:14px">Пневмококк (V1)</b><div class="sub">20 февраля</div></div><span class="tag green">✓</span></div>
+            <div class="meal-line"><div class="t">роддом</div><div class="grow"><b style="font-size:14px">Гепатит B (V1) · БЦЖ</b><div class="sub">декабрь 2025</div></div><span class="tag green">✓</span></div>
+          </div>
+          <div class="section-t">Впереди</div>
+          <div class="card">
+            <div class="meal-line"><div class="t">12 мес</div><div class="grow"><b style="font-size:14px">Корь · краснуха · паротит (ККП)</b><div class="sub">Одна комбинированная вакцина.</div></div></div>
+            <div class="meal-line"><div class="t">15 мес</div><div class="grow"><b style="font-size:14px">Пневмококк — ревакцинация</b></div></div>
+            <div class="meal-line"><div class="t">18 мес</div><div class="grow"><b style="font-size:14px">АКДС (RV1) · Полио (RV1) · Hib (RV)</b></div></div>
+          </div>
+          <div class="section-t">Спокойствие — в науке</div>
+          <div class="note"><span class="ne">🔬</span><span><b>Несколько вакцин за визит — безопасно:</b> иммунная система малыша ежедневно обрабатывает тысячи антигенов.</span></div>
+          <div class="note"><span class="ne">📄</span><span><b>Миф «прививки и аутизм» опровергнут:</b> исходная статья отозвана за подтасовку, исследования на 1,2+ млн детей связи не нашли.</span></div>
+          <div class="note"><span class="ne">📅</span><span><b>Перенос — не катастрофа:</b> интервалы гибкие, календарь продолжают, а не начинают заново.</span></div>
+        </div>
+
+        <div class="subpage" id="pg-hl-grow">
+          <button class="tr" style="width:100%; margin-bottom:12px" onclick="toast('📏','Измерение','Вес 7,8 кг · рост 67 см — записано')">
+            <div class="te">📏</div><div class="tn">Добавить измерение</div><div class="tl">Последнее: 20 июня · 7,8 кг · 67 см · голова 43 см</div></button>
+          <div class="card">
+            <div class="eyebrow" style="margin-bottom:8px">Вес · перцентиль 62 (норма ВОЗ)</div>
+            <svg class="growth-chart" viewBox="0 0 320 120" preserveAspectRatio="none">
+              <path d="M0,95 C60,80 120,60 200,45 C260,35 300,28 320,25 L320,120 L0,120 Z" fill="var(--accent-soft)" opacity=".7"></path>
+              <path d="M0,95 C60,80 120,60 200,45 C260,35 300,28 320,25" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"></path>
+              <circle cx="290" cy="29" r="5" fill="var(--accent)" stroke="var(--card)" stroke-width="2.5"></circle>
+            </svg>
+            <div class="row" style="justify-content:space-between; margin-top:6px">
+              <span class="sub">рождение</span><b class="num" style="font-size:15px">7,8 кг</b><span class="sub">сегодня</span>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="v num">67 см</div><div class="l">рост · P58</div></div>
+            <div class="stat"><div class="v num">7,8 кг</div><div class="l">вес · P62</div></div>
+            <div class="stat"><div class="v num">43 см</div><div class="l">голова · P60</div></div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="card"><div class="eyebrow" style="margin-bottom:6px">🦷 Зубы · 0 из 20</div><div class="sub" style="margin:0">Пока ни одного — норма до 12 мес. Слюни и «всё в рот» могут начаться за месяц до первого зуба.</div></div>
+        </div>
+
+        <div class="subpage" id="pg-hl-state">
+          <div class="tr-grid">
+            <button class="tr" onclick="toast('🌡','Температура','36,6 — записано')">
+              <div class="te">🌡</div><div class="tn">Температура</div><div class="tl">Вчера 36,8<br>сегодня — норма</div></button>
+            <button class="tr" onclick="toast('💊','Лекарство','Витамин D · 1 капля — записано')">
+              <div class="te">💊</div><div class="tn">Лекарства</div><div class="tl">Витамин D<br>ежедневно, утро</div></button>
+            <button class="tr" onclick="toast('🚼','Стул','Записано: норма')">
+              <div class="te">🚼</div><div class="tn">Стул</div><div class="tl">Последний: вчера<br>норма</div></button>
+            <button class="tr" onclick="toast('🤔','Это нормально?','Гид по симптомам: когда наблюдать, когда к врачу, когда 103')">
+              <div class="te">🤔</div><div class="tn">Это нормально?</div><div class="tl">Гид по симптомам<br>без паники</div></button>
+          </div>
+          <div class="card tinted-accent" onclick="toast('📄','Отчёт готовится','PDF: сон, рост, вес, температура, лекарства, реакции на продукты')" style="cursor:pointer">
+            <div class="row">
+              <div class="emoji-lg">📄</div>
+              <div class="grow">
+                <div class="h-card" style="margin:0">PDF для педиатра</div>
+                <div class="sub">Один экспорт перед приёмом: сон · питание · стул · температура · реакции</div>
+              </div>
+              <span style="color:var(--text2)">›</span>
+            </div>
+          </div>
+          <div class="card" onclick="toast('🩺','Чат с педиатром','Консультация с автоматически приложенным журналом — скоро')" style="cursor:pointer">
+            <div class="row"><div class="emoji-lg">🩺</div><div class="grow"><div class="h-card" style="margin:0">Чат с педиатром</div><div class="sub">Врач видит журнал малыша — не нужно пересказывать</div></div><span style="color:var(--text2)">›</span></div>
+          </div>
+          <div class="card tinted-terra" onclick="openMom()" style="cursor:pointer">
+            <div class="row"><div class="emoji-lg">💛</div><div class="grow"><div class="h-card" style="margin:0">Забота о маме</div><div class="sub">Настроение мамы · мягкая поддержка · без оценок</div></div><span style="color:var(--text2)">›</span></div>
+          </div>
+        </div>
+
+        <div class="subpage" id="pg-hl-kit">
+          <div class="note alert" style="margin-bottom:12px"><span class="ne">🩺</span><span><b>Дозировки лекарств назначает врач по весу ребёнка.</b> Здесь — что держать дома и когда бить тревогу.</span></div>
+          <div class="section-t" style="margin-top:4px">Что должно быть дома</div>
+          <div class="rule"><span class="re">🌡</span><div><b>Термометр</b><p>Электронный — базовый. Бесконтактный — удобнее ночью.</p></div></div>
+          <div class="rule"><span class="re">💊</span><div><b>Жаропонижающее в детской форме</b><p>Парацетамол и ибупрофен (свечи/суспензия). Дозу по весу — только с врачом.</p></div></div>
+          <div class="rule"><span class="re">💧</span><div><b>Средство для регидратации</b><p>Главный риск при рвоте и диарее — обезвоживание.</p></div></div>
+          <div class="rule"><span class="re">👃</span><div><b>Физраствор и аспиратор</b><p>Малыш не умеет сморкаться — при насморке это спасение ночного сна.</p></div></div>
+          <div class="rule"><span class="re">🩹</span><div><b>Перевязка: бинт, пластыри, антисептик без спирта</b><p>Хлоргексидин — да; йод и зелёнку на открытую рану — нет.</p></div></div>
+          <div class="section-t">Когда срочно к врачу</div>
+          <div class="note alert"><span class="ne">🚨</span><span>Температура у ребёнка младше 3 мес · вялость и отказ от питья · сыпь, не бледнеющая при надавливании · затруднённое дыхание · сухой подгузник 6+ часов. Сомневаетесь — 103.</span></div>
+        </div>
+
+        <div class="subpage" id="pg-hl-sos">
+          <div class="note alert" style="margin-bottom:12px"><span class="ne">📞</span><span><b>Скорая — 103 · единый номер — 112.</b> Раздел работает без интернета и всегда бесплатен.</span></div>
+          <div class="rule" style="cursor:pointer" onclick="openSOS('choke')"><span class="re">🫁</span><div><b>Подавился</b><p>Тихий, не может вдохнуть, синеет → пошаговая инструкция крупно ›</p></div></div>
+          <div class="rule" style="cursor:pointer" onclick="toast('🤕','Упал','Когда наблюдать дома, а когда в травмпункт — в полной версии')"><span class="re">🤕</span><div><b>Упал / ударился головой</b><p>Когда наблюдать, а когда — сразу в травмпункт ›</p></div></div>
+          <div class="rule" style="cursor:pointer" onclick="toast('🔥','Ожог','15–20 минут прохладной воды. Никакого масла и сметаны')"><span class="re">🔥</span><div><b>Ожог</b><p>Прохладная вода 15–20 минут. Без масла и сметаны ›</p></div></div>
+          <div class="rule" style="cursor:pointer" onclick="toast('🌡','Температура','Что делать по возрасту и когда 103 — в полной версии')"><span class="re">🌡</span><div><b>Высокая температура</b><p>Что делать по возрасту и когда звонить 103 ›</p></div></div>
+          <div class="rule" style="cursor:pointer" onclick="toast('⚡','Судороги','На бок, ничего в рот, засечь время, 103')"><span class="re">⚡</span><div><b>Судороги</b><p>На бок, ничего в рот, засечь время, вызвать 103 ›</p></div></div>
+          <div class="rule" style="cursor:pointer" onclick="toast('☠️','Отравление','Не вызывать рвоту без указания врача. Токсикология: 8-800-…')"><span class="re">☠️</span><div><b>Проглотил опасное</b><p>Не вызывать рвоту без указания врача ›</p></div></div>
+        </div>
+      </div>
+
+      <!-- ═══ 5 · AI-ПОМОЩНИК ═══ -->
+      <div class="screen" id="scr-ai">
+        <div class="rise" style="padding-top:10px; margin-bottom:12px">
+          <h2 class="h-screen">✦ Помощник</h2>
+          <div class="sub">Знает Мишу: возраст, сон, прикорм, настроение, умелки, прививки</div>
+        </div>
+        <div class="ai-grid rise">
+          <button class="ai-card" onclick="openAI('today')"><div class="ae2">☀️</div>Что сегодня с малышом?</button>
+          <button class="ai-card" onclick="openAI('sleep')"><div class="ae2">😴</div>Анализ сна</button>
+          <button class="ai-card" onclick="openAI('food')"><div class="ae2">🍽</div>Идеи прикорма</button>
+          <button class="ai-card" onclick="openAI('games')"><div class="ae2">🎯</div>Какие игры подойдут?</button>
+          <button class="ai-card" onclick="openAI('day')"><div class="ae2">🗓</div>Составь день по режиму</button>
+          <button class="ai-card" onclick="openAI('mood')"><div class="ae2">🥺</div>Почему капризничает?</button>
+        </div>
+        <div class="note rise"><span class="ne">📸</span><span><b>Проверка тарелки по фото</b> — сфотографируйте тарелку, AI проверит безопасность нарезки. Скоро, в bubka+.</span></div>
+        <div class="sub rise" style="text-align:center; padding:4px 10px 0">Помощник не ставит диагнозы и не заменяет врача.<br>При тревожных симптомах — сразу к педиатру.</div>
+      </div>
+
+      <!-- ═══ ПРОФИЛЬ ═══ -->
+      <div class="screen" id="scr-profile">
+        <div class="rise" style="padding-top:10px">
+          <h2 class="h-screen">Профиль</h2>
+        </div>
+        <div class="card rise" style="margin-top:14px">
+          <div class="row">
+            <div class="avatar" style="width:58px; height:58px; font-size:30px">👶</div>
+            <div class="grow">
+              <div class="h-card" style="margin:0">Миша</div>
+              <div class="sub">24 декабря 2025 · 6 мес 12 дней<br>ГВ + прикорм · аллергий нет</div>
+            </div>
+            <span style="color:var(--text2)">›</span>
+          </div>
+        </div>
+        <div class="rise">
+          <div class="section-t" style="margin-top:4px">Семья · всё синхронизируется</div>
+          <div class="fam">
+            <div class="f"><div class="fe">👩</div><div class="fn">Мама</div><div class="fr">владелец</div></div>
+            <div class="f"><div class="fe">👨</div><div class="fn">Папа</div><div class="fr">взрослый</div></div>
+            <div class="f" style="opacity:.65"><div class="fe">👵</div><div class="fn">Бабушка</div><div class="fr">+ пригласить</div></div>
+          </div>
+        </div>
+        <div class="plus-card rise" style="margin-top:14px">
+          <h3>bubka+ ✨</h3>
+          <p>AI без лимита, прогноз сна, планы прикорма, «История месяца», книга «Первый год», безлимит фото и семейные роли.</p>
+          <button class="btn" onclick="openPaywall()">Попробовать 7 дней бесплатно</button>
+        </div>
+        <div class="card rise" style="padding:6px 18px">
+          <div class="prow"><div class="pe">🔔</div>Уведомления<span class="chev">›</span></div>
+          <div class="prow"><div class="pe">🌙</div>Ночной режим 3:00<span class="sub" style="margin-left:auto; margin-top:0">после заката</span></div>
+          <div class="prow"><div class="pe">📡</div>Офлайн-режим<span class="sub" style="margin-left:auto; margin-top:0">SOS всегда на устройстве</span></div>
+          <div class="prow"><div class="pe">🌍</div>Язык<span class="sub" style="margin-left:auto; margin-top:0">русский</span><span class="chev">›</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ AI-КАРТОЧКА (оверлей) ═══ -->
+      <div class="detail" id="ai" style="z-index:31">
+        <button class="back" onclick="closeAI()">‹</button>
+        <div class="detail-scroll">
+          <div class="sub-head">
+            <div class="se" id="ai-e">✨</div>
+            <h2 id="ai-t">AI-карточка</h2>
+            <p id="ai-d"></p>
+          </div>
+          <div class="sub-body" id="ai-body"></div>
+        </div>
+      </div>
+
+      <!-- ═══ КАРТОЧКА ЛЕНТЫ (оверлей с «назад») ═══ -->
+      <div class="detail" id="info" style="z-index:31">
+        <button class="back" onclick="closeInfo()">‹</button>
+        <div class="detail-scroll">
+          <div class="sub-head">
+            <div class="se" id="info-e">✨</div>
+            <h2 id="info-t"></h2>
+            <p id="info-d"></p>
+          </div>
+          <div class="sub-body" id="info-body"></div>
+        </div>
+      </div>
+
+      <!-- ═══ КАРТОЧКА ПРОДУКТА (оверлей) ═══ -->
+      <div class="detail" id="detail">
+        <button class="back" onclick="closeFood()">‹</button>
+        <div class="detail-scroll">
+          <div class="d-hero" id="d-hero"><span id="d-emoji">🎃</span></div>
+          <div class="d-body" id="d-body"></div>
+        </div>
+        <div class="d-cta">
+          <button class="btn btn-soft" style="flex:1" onclick="openSheet()">Статус</button>
+          <button class="btn btn-primary" style="flex:1.6" onclick="logFood()">Дали сегодня ✓</button>
+        </div>
+      </div>
+
+      <!-- ═══ SOS: ПОДАВИЛСЯ (оверлей) ═══ -->
+      <div class="detail" id="sosd" style="z-index:33">
+        <button class="back" onclick="closeSOSd()">‹</button>
+        <div class="detail-scroll">
+          <div class="sub-head">
+            <div class="se">🫁</div>
+            <h2 style="color:var(--danger)">Малыш подавился</h2>
+            <p>Для ребёнка до 1 года. Действуйте спокойно и быстро.</p>
+          </div>
+          <div class="sub-body">
+            <div class="sos-step"><b>1</b><div class="tx">Положите малыша животом на своё предплечье, головой вниз, поддерживая подбородок.</div></div>
+            <div class="sos-step"><b>2</b><div class="tx">Сделайте 5 скользящих хлопков основанием ладони между лопатками.</div></div>
+            <div class="sos-step"><b>3</b><div class="tx">Не помогло — переверните на спину: 5 толчков двумя пальцами в центр груди.</div></div>
+            <div class="sos-step"><b>4</b><div class="tx">Чередуйте шаги 2–3, пока предмет не выйдет или не приедет скорая.</div></div>
+            <div class="note"><span class="ne">😮</span><span><b>Кряхтит и краснеет</b> — рвотный рефлекс работает, не вмешивайтесь. <b>Тихий и синеет</b> — действуйте по шагам.</span></div>
+            <button class="btn" style="background:var(--danger); color:#fff; margin-top:6px" onclick="toast('📞','Звонок','103 · скорая помощь')">📞 Вызвать скорую · 103</button>
+            <div style="height:20px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ЖУРНАЛ ДНЯ ═══ -->
+      <div class="detail" id="journal" style="z-index:32">
+        <button class="back" onclick="closeJournal()">‹</button>
+        <div class="detail-scroll">
+          <div class="sub-head">
+            <div class="se">📖</div>
+            <h2>Журнал · сегодня</h2>
+            <p>Тап по записи — изменить время или удалить. Ничего не теряется.</p>
+          </div>
+          <div class="sub-body" id="journal-list"></div>
+        </div>
+        <div class="d-cta">
+          <button class="btn btn-primary" onclick="closeJournal();openRecords()">➕ Добавить запись</button>
+        </div>
+      </div>
+
+      <!-- ═══ ИТОГ ДНЯ ═══ -->
+      <div class="detail" id="evening" style="z-index:32">
+        <button class="back" onclick="closeEvening()">‹</button>
+        <div class="detail-scroll">
+          <div class="sub-head">
+            <div class="se">🌙</div>
+            <h2>Итог дня</h2>
+            <p>Приходит вечером одной карточкой — закрыть день со спокойной душой.</p>
+          </div>
+          <div class="sub-body">
+            <div class="stats" style="margin-bottom:12px">
+              <div class="stat"><div class="v num">13:10</div><div class="l">сон всего</div></div>
+              <div class="stat"><div class="v num">3</div><div class="l">приёма пищи</div></div>
+              <div class="stat"><div class="v num">140</div><div class="l">мл воды</div></div>
+            </div>
+            <div class="note"><span class="ne">💚</span><span><b>Хороший день:</b> тыква зашла со второго раза, оба сна уложились в окна, прогулка 1 ч 20 мин.</span></div>
+            <div class="note"><span class="ne">🌟</span><span><b>Момент дня:</b> первая проба тыквы — фото сохранено в дневник.</span></div>
+            <div class="section-t">Завтра</div>
+            <div class="note"><span class="ne">🗓</span><span>Окна сна ≈ 9:40 и 13:30 · тыква, день 3 — можно смешать с овсянкой · вечером хороший день для купания с игрушками.</span></div>
+            <div class="note" style="margin-top:8px"><span class="ne">💛</span><span>Вы справились. Правда. Спокойной ночи, мама.</span></div>
+            <div style="height:16px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ЗАБОТА О МАМЕ ═══ -->
+      <div class="detail" id="mom" style="z-index:32">
+        <button class="back" onclick="closeMom()">‹</button>
+        <div class="detail-scroll">
+          <div class="sub-head">
+            <div class="se">💛</div>
+            <h2>Как вы, мама?</h2>
+            <p>Ваше состояние — тоже здоровье малыша. Здесь никто не оценивает.</p>
+          </div>
+          <div class="sub-body">
+            <div class="mood-row" id="mom-mood">
+              <button onclick="pickMood(this,'Прекрасно! Пусть таких дней будет больше 🤍')">😊</button>
+              <button onclick="pickMood(this,'Ровный день — это уже победа 🤍')">🙂</button>
+              <button onclick="pickMood(this,'Устали? Это нормально. Вы делаете очень много')">😐</button>
+              <button onclick="pickMood(this,'Тяжёлый день. Побудьте к себе добрее — вы справляетесь')">😔</button>
+              <button onclick="pickMood(this,'Вам сейчас непросто. Посмотрите блок поддержки ниже 🤍')">😭</button>
+            </div>
+            <div class="sub" style="text-align:center; margin-bottom:14px">Одно касание в день — мы заметим, если станет тяжело</div>
+            <div class="section-t">Сегодня для вас</div>
+            <div class="rule"><span class="re">☕️</span><div><b>10 минут только ваши</b><p>Миша поспит ~1,5 часа. Первые 10 минут — не дела, а чай и тишина.</p></div></div>
+            <div class="rule"><span class="re">🍽</span><div><b>А вы сегодня ели?</b><p>Серьёзно. Поставим напоминание на обед вместе с обедом малыша?</p></div></div>
+            <div class="rule" style="cursor:pointer" onclick="toast('📋','Самопроверка','10 мягких вопросов (шкала EPDS) · 3 минуты · результат виден только вам')"><span class="re">🌦</span><div><b>Проверить своё состояние</b><p>Каждая 5–7-я мама сталкивается с послеродовой депрессией. Это лечится. 10 вопросов, 3 минуты ›</p></div></div>
+            <div class="note"><span class="ne">🤍</span><span><b>Если совсем тяжело:</b> бесплатная линия психологической помощи мамам 8-800-222-05-45 · это не слабость, это забота о себе и малыше.</span></div>
+            <div style="height:16px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ РЕЦЕПТ ═══ -->
+      <div class="detail" id="recipe" style="z-index:32">
+        <button class="back" onclick="closeRecipe()">‹</button>
+        <div class="detail-scroll">
+          <div class="d-hero" id="r-hero" style="font-size:80px"><span id="r-emoji">🥣</span></div>
+          <div class="d-body" id="r-body"></div>
+        </div>
+        <div class="d-cta">
+          <button class="btn btn-primary" onclick="closeRecipe();toast('🥣','Приготовили!','Записано в дневник прикорма')">Приготовили → в дневник ✓</button>
+        </div>
+      </div>
+
+      <!-- ═══ ОНБОРДИНГ ═══ -->
+      <div class="detail open" id="onb" style="z-index:46">
+        <button class="back" id="onb-back" style="display:none; font-size:22px" onclick="onbBack()">‹</button>
+        <button class="skip" onclick="finishOnb(true)">Пропустить</button>
+        <div class="detail-scroll">
+
+          <!-- 1 · Имя + пол -->
+          <div class="onb-step on" id="onb-1">
+            <div class="sub-head" style="padding-top:104px; text-align:center">
+              <div class="se" style="font-size:56px">👶</div>
+              <h2>Как зовут малыша?</h2>
+              <p>Начнём со знакомства — остальное<br>настроим за минуту.</p>
+            </div>
+            <div class="sub-body" style="max-width:300px; margin:0 auto">
+              <input class="onb-input" id="onb-name" placeholder="Имя малыша" style="text-align:center">
+              <div class="age-seg" style="margin:4px 0 0">
+                <button class="on" onclick="pickGender(this,false)">👦 Мальчик</button>
+                <button onclick="pickGender(this,true)">👧 Девочка</button>
+              </div>
+              <p class="sub" style="text-align:center; margin-top:12px">Пол нужен для норм роста и веса ВОЗ —<br>у мальчиков и девочек они разные.</p>
+            </div>
+          </div>
+
+          <!-- 2 · Дата рождения -->
+          <div class="onb-step" id="onb-2">
+            <div class="sub-head" style="padding-top:104px; text-align:center">
+              <div class="se" style="font-size:56px">🎂</div>
+              <h2 id="onb2-h">Когда Миша родился?</h2>
+              <p>Возраст — главный фильтр: питание, игры<br>и советы подстроятся автоматически.</p>
+            </div>
+            <div class="sub-body" style="max-width:300px; margin:0 auto">
+              <input class="onb-input" id="onb-bd" type="date" value="2025-12-24">
+              <div class="onb-lbl">При рождении · для графиков ВОЗ · необязательно</div>
+              <div class="onb-row">
+                <input class="onb-input" inputmode="numeric" placeholder="Вес, г">
+                <input class="onb-input" inputmode="numeric" placeholder="Рост, см">
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 · Раньше срока -->
+          <div class="onb-step" id="onb-3">
+            <div class="sub-head" style="padding-top:104px; text-align:center">
+              <div class="se" style="font-size:56px">🌱</div>
+              <h2 id="onb3-h">Миша торопился к вам?</h2>
+              <p>Малышам, родившимся раньше срока, мы считаем развитие по скорректированному возрасту — от даты, когда малыш должен был родиться. Так советы честнее.</p>
+            </div>
+            <div class="sub-body" style="max-width:300px; margin:0 auto">
+              <div class="onb-opt on" onclick="pickBorn(this,false)">🕰 В срок · 37–42 недели</div>
+              <div class="onb-opt" onclick="pickBorn(this,true)">🌱 Немного раньше · 33–36 недель</div>
+              <div class="onb-opt" onclick="pickBorn(this,true)">💛 Настоящий торопыжка · до 32 недель</div>
+              <div id="onb-pdr" style="display:none">
+                <div class="onb-lbl">Предполагаемая дата родов (ПДР)</div>
+                <input class="onb-input" type="date" value="2026-02-05">
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 · Семья -->
+          <div class="onb-step" id="onb-4">
+            <div class="sub-head" style="padding-top:84px; text-align:center">
+              <div class="se" style="font-size:56px">👨‍👩‍👧</div>
+              <h2>Пара слов о вас</h2>
+              <p>Будем обращаться по имени. Папу можно<br>добавить позже — у него будет свой доступ.</p>
+            </div>
+            <div class="sub-body" style="max-width:300px; margin:0 auto">
+              <div class="onb-row">
+                <input class="onb-input" id="onb-mom" placeholder="Имя мамы" style="flex:2">
+                <input class="onb-input" inputmode="numeric" placeholder="Возраст">
+              </div>
+              <div class="onb-row">
+                <input class="onb-input" placeholder="Имя папы" style="flex:2">
+                <input class="onb-input" inputmode="numeric" placeholder="Возраст">
+              </div>
+              <div class="onb-lbl">Это ваш первый малыш?</div>
+              <div class="age-seg" style="margin:0">
+                <button class="on" onclick="pickSeg(this)">💫 Первый</button>
+                <button onclick="pickSeg(this)">🧸 Уже есть опыт</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5 · Город -->
+          <div class="onb-step" id="onb-5">
+            <div class="sub-head" style="padding-top:104px; text-align:center">
+              <div class="se" style="font-size:56px">📍</div>
+              <h2>Где вы живёте?</h2>
+              <p>Подскажем, как одеть малыша по погоде,<br>и подстроим сезонные советы.</p>
+            </div>
+            <div class="sub-body" style="max-width:300px; margin:0 auto">
+              <input class="onb-input" id="onb-city" placeholder="Город" style="text-align:center">
+              <button class="btn btn-soft" onclick="onbCity()">📍 Определить автоматически</button>
+            </div>
+          </div>
+
+          <!-- 6 · Вскармливание -->
+          <div class="onb-step" id="onb-6">
+            <div class="sub-head" style="padding-top:84px; text-align:center">
+              <div class="se" style="font-size:56px">🍼</div>
+              <h2 id="onb6-h">Как Миша ест?</h2>
+              <p>Настроим трекеры кормлений и советы.</p>
+            </div>
+            <div class="sub-body" style="max-width:300px; margin:0 auto">
+              <div class="onb-opt" data-feed="bf" onclick="pickOpt(this)">🤱 Грудное вскармливание</div>
+              <div class="onb-opt" data-feed="ff" onclick="pickOpt(this)">🍼 Смесь</div>
+              <div class="onb-opt" data-feed="mixed" onclick="pickOpt(this)">🤱🍼 Смешанное — грудь и смесь</div>
+              <div class="onb-opt on" data-feed="bf-solid" onclick="pickOpt(this)">🥣 Грудное + прикорм</div>
+              <div class="onb-opt" data-feed="ff-solid" onclick="pickOpt(this)">🥄 Смесь + прикорм</div>
+              <div class="onb-opt" data-feed="mixed-solid" onclick="pickOpt(this)">🍽 Смешанное + прикорм</div>
+            </div>
+          </div>
+
+          <!-- 7 · Что волнует -->
+          <div class="onb-step" id="onb-7">
+            <div class="sub-head" style="padding-top:96px; text-align:center">
+              <div class="se" style="font-size:56px">✨</div>
+              <h2>Что сейчас волнует больше всего?</h2>
+              <p>Можно выбрать несколько — соберём ленту<br>«Сегодня» под ваши задачи.</p>
+            </div>
+            <div class="sub-body" style="max-width:300px; margin:0 auto">
+              <div class="onb-opt on" data-int="sleep" onclick="pickMulti(this)">😴 Сон и режим</div>
+              <div class="onb-opt on" data-int="food" onclick="pickMulti(this)">🥣 Прикорм и аллергены</div>
+              <div class="onb-opt" data-int="dev" onclick="pickMulti(this)">🌱 Развитие и игры</div>
+              <div class="onb-opt" data-int="health" onclick="pickMulti(this)">💉 Прививки и здоровье</div>
+              <div class="onb-opt" data-int="mom" onclick="pickMulti(this)">💆‍♀️ Ресурс и настроение мамы</div>
+            </div>
+          </div>
+
+          <div class="onb-dots" id="onb-dots"><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="d-cta">
+          <button class="btn btn-primary" id="onb-next" onclick="onbNext()">Дальше</button>
+        </div>
+      </div>
+
+      <!-- ═══ ПЕЙВОЛЛ ═══ -->
+      <div class="detail" id="paywall" style="z-index:32">
+        <button class="back" onclick="closePaywall()">✕</button>
+        <div class="detail-scroll">
+          <div style="padding:70px 20px 0">
+            <div class="eyebrow" style="color:var(--accent)">bubka+ ✨</div>
+            <h2 style="font-size:25px; font-weight:750; letter-spacing:-.02em; margin-top:6px">Миша спит лучше, а вы — спокойнее</h2>
+            <div style="margin-top:14px">
+              <div class="pay-benefit"><span class="pe2">✦</span><span><b>AI без лимита</b> — все карточки и свободный чат</span></div>
+              <div class="pay-benefit"><span class="pe2">😴</span><span><b>Прогноз сна</b> на данных вашего малыша</span></div>
+              <div class="pay-benefit"><span class="pe2">📸</span><span><b>Проверка тарелки по фото</b> — безопасность нарезки</span></div>
+              <div class="pay-benefit"><span class="pe2">🍲</span><span><b>Планы прикорма</b> + 150+ рецептов со списком покупок</span></div>
+              <div class="pay-benefit"><span class="pe2">🎞</span><span><b>«История месяца»</b> и книга «Первый год малыша»</span></div>
+              <div class="pay-benefit"><span class="pe2">👨‍👩‍👧</span><span><b>Семейные роли</b> (до 5 взрослых) и безлимит фото</span></div>
+            </div>
+            <div class="note" style="margin-top:14px"><span class="ne">💚</span><span><b>Бесплатным остаётся всё главное:</b> все трекеры (и задним числом), дневник, прививки, базовый прикорм, графики роста, аптечка и SOS.</span></div>
+            <div class="section-t">Тариф</div>
+            <div id="plans">
+              <div class="pay-opt on" onclick="pickPlan(this)"><div class="grow"><b>Год · 2 990 ₽</b><div class="sub">≈249 ₽/мес · экономия 44%</div></div><span class="tag green">Популярный</span></div>
+              <div class="pay-opt" onclick="pickPlan(this)"><div class="grow"><b>Месяц · 449 ₽</b><div class="sub">без обязательств</div></div></div>
+              <div class="pay-opt" onclick="pickPlan(this)"><div class="grow"><b>Навсегда · 5 990 ₽</b><div class="sub">разовый платёж · AI с месячным лимитом</div></div></div>
+            </div>
+            <div style="height:8px"></div>
+          </div>
+        </div>
+        <div class="d-cta" style="flex-direction:column; gap:8px">
+          <button class="btn btn-primary" onclick="closePaywall(); toast('✨','Триал активирован','7 дней бесплатно · напомним за 2 дня до списания')">Попробовать 7 дней бесплатно</button>
+          <div class="sub" style="text-align:center; margin:0">Отмена в один тап · напомним до списания</div>
+        </div>
+      </div>
+
+      <!-- ═══ SHEETS / TOAST / CONFETTI ═══ -->
+      <div class="scrim" id="scrim" onclick="closeSheet();closeRecords()"></div>
+      <div class="sheet" id="sheet">
+        <div class="grab"></div>
+        <h3 id="sheet-title">Тыква — отметить статус</h3>
+        <button class="status-opt" onclick="pickStatus('Не пробовали','⚪')"><span class="se">⚪</span>Не пробовали<span class="sd dot" style="background:#C9C4BC"></span></button>
+        <button class="status-opt" onclick="pickStatus('Пробуем','🌱')"><span class="se">🌱</span>Пробуем<span class="sd dot" style="background:var(--warn)"></span></button>
+        <button class="status-opt" onclick="pickStatus('Нравится','🙂')"><span class="se">🙂</span>Нравится<span class="sd dot" style="background:var(--accent)"></span></button>
+        <button class="status-opt" onclick="pickStatus('Любимое','❤️',true)"><span class="se">❤️</span>Любимое<span class="sd dot" style="background:var(--terra)"></span></button>
+        <button class="status-opt" onclick="pickStatus('Не понравилось','😕')"><span class="se">😕</span>Не понравилось<span class="sd dot" style="background:#8A857D"></span></button>
+        <button class="status-opt" onclick="pickStatus('Реакция — понаблюдаем','👀')"><span class="se">⚠️</span>Реакция<span class="sd dot" style="background:var(--warn)"></span></button>
+        <button class="status-opt" onclick="pickStatus('Аллергия — записали, покажите педиатру','🩺')"><span class="se">🚫</span>Аллергия<span class="sd dot" style="background:var(--danger)"></span></button>
+      </div>
+
+      <div class="sheet" id="records">
+        <div class="grab"></div>
+        <h3>Новая запись</h3>
+        <div class="rec-grid">
+          <button onclick="recLog('😴','Сон записан')"><span>😴</span>Сон</button>
+          <button onclick="recLog('🤱','Грудь · левая — записано')"><span>🤱</span>Грудь</button>
+          <button onclick="recLog('🍼','Смесь 180 мл — записано')"><span>🍼</span>Смесь</button>
+          <button onclick="recLog('🥣','Прикорм записан')"><span>🥣</span>Прикорм</button>
+          <button onclick="recLog('💧','Вода +30 мл')"><span>💧</span>Вода</button>
+          <button onclick="recLog('💊','Лекарство записано')"><span>💊</span>Лекарство</button>
+          <button onclick="recLog('🌡','36,6 — записано')"><span>🌡</span>Темп-ра</button>
+          <button onclick="recLog('🚶','Прогулка началась')"><span>🚶</span>Прогулка</button>
+          <button onclick="recLog('🩲','Подгузник записан')"><span>🩲</span>Подгузник</button>
+          <button onclick="recLog('🛁','Купание записано')"><span>🛁</span>Купание</button>
+          <button onclick="recLog('🙂','Настроение записано')"><span>🙂</span>Настроение</button>
+          <button onclick="recLog('🕐','Запись за вчера, 21:30 ✓')"><span>🕐</span>Задним числом</button>
+        </div>
+        <div class="hint">Любую запись можно добавить сейчас — или задним числом</div>
+      </div>
+
+      <div class="toast" id="toast">
+        <span class="te2" id="toast-e">🥄</span>
+        <div><div class="tt2" id="toast-t">Готово</div><div class="td2" id="toast-d"></div></div>
+      </div>
+      <div class="confetti-zone" id="confetti"></div>
+    </div>
+
+    <!-- ═══ TAB BAR ═══ -->
+    <div class="tabbar">
+      <button class="tab active" data-scr="scr-home" onclick="go(this)">
+        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5.5 10v9h13v-9"></path></svg>Сегодня</button>
+      <button class="tab" data-scr="scr-food" onclick="go(this)">
+        <svg viewBox="0 0 24 24"><path d="M7 3v7a2 2 0 0 0 2 2h0V3"></path><path d="M8 12v9"></path><path d="M17 3c-1.5 1.5-2 4-2 6v3h2v9"></path></svg>Питание</button>
+      <button class="ai-fab" id="fab" onclick="goAI()" aria-label="AI-помощник">✦</button>
+      <button class="tab" data-scr="scr-dev" onclick="go(this)">
+        <svg viewBox="0 0 24 24"><path d="M12 21V9"></path><path d="M12 9C12 5.5 9.5 3 6 3c0 3.5 2.5 6 6 6Z"></path><path d="M12 13c0-3.5 2.5-6 6-6 0 3.5-2.5 6-6 6Z"></path></svg>Развитие</button>
+      <button class="tab" data-scr="scr-health" onclick="go(this)">
+        <svg viewBox="0 0 24 24"><path d="M12 21C7 17 3 13.5 3 9.5 3 6.5 5.5 4 8.5 4c1.5 0 2.8.7 3.5 1.8C12.7 4.7 14 4 15.5 4 18.5 4 21 6.5 21 9.5c0 4-4 7.5-9 11.5Z"></path></svg>Здоровье</button>
+    </div>
+  </div>
+</div>
+
+<p class="footer-note">Прототип v0.7 · структура концепта: Сегодня · Питание · ✦ AI · Развитие · Здоровье + меню ☰ (дети, семья, передача смены, чек-листы, bubka+). Free — все трекеры и задним числом, дневник, прививки, SOS. Эмодзи заменят живые фото в продакшн-версии.</p>
+
+<script>
+  // ── навигация ──
+  function go(btn){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('fab').classList.remove('active');
+    btn.classList.add('active');
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const scr=document.getElementById(btn.dataset.scr);
+    scr.classList.add('active'); scr.scrollTop=0;
+    closeAllOverlays();
+  }
+  function tabTo(id){ const t=document.querySelector(`.tab[data-scr="${id}"]`); if(t) go(t); else showScreen(id); }
+  function goAI(){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('fab').classList.add('active');
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('scr-ai').classList.add('active');
+    closeAllOverlays();
+  }
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('fab').classList.remove('active');
+    closeAllOverlays();
+  }
+  function closeAllOverlays(){ closeFood(); closeSheet(); closeRecords(); closeDrawer(); closePaywall(); closeAI(); closeInfo(); closeSOSd(); closeJournal(); closeEvening(); closeMom(); closeRecipe(); }
+
+  function seg(btn, pageId){
+    const scr=btn.closest('.screen');
+    scr.querySelectorAll('.segs .chip').forEach(c=>c.classList.remove('on'));
+    btn.classList.add('on');
+    scr.querySelectorAll('.subpage').forEach(p=>p.classList.remove('on'));
+    document.getElementById(pageId).classList.add('on');
+  }
+  function gotoSeg(scrId, pageId){
+    tabTo(scrId);
+    const scr=document.getElementById(scrId);
+    const btn=scr.querySelector(`.chip[data-pg="${pageId}"]`);
+    if(btn) seg(btn, pageId);
+    else{ // страница без чипа (например, чек-листы из меню)
+      scr.querySelectorAll('.segs .chip').forEach(c=>c.classList.remove('on'));
+      scr.querySelectorAll('.subpage').forEach(p=>p.classList.remove('on'));
+      document.getElementById(pageId).classList.add('on');
+    }
+  }
+  function drGo(id){closeDrawer(); tabTo(id);}
+  function drSeg(scrId, pageId){closeDrawer(); gotoSeg(scrId, pageId);}
+  function drSeg2(id){tabTo(id);}
+  function openDrawer(){document.getElementById('dscrim').classList.add('open');document.getElementById('drawer').classList.add('open');}
+  function closeDrawer(){document.getElementById('dscrim').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
+
+  // ── данные: продукты ──
+  const FOODS={
+    pumpkin:{e:'🎃',n:'Тыква',cat:'Овощи',a:'с 6 мес',al:null,choke:'низкий',st:null,bg:['#F5DFC0','#E4B183'],dbg:['#4A3A28','#2E241A'],
+      benefit:'Витамин А, мягкий вкус — редкие реакции, идеальный старт.',
+      cook:'Запечь или на пару до мягкости вилки, взбить в пюре.',
+      store:'Пюре в формах для льда — до 3 месяцев. Кубик = порция.',
+      not:'Слишком жидкое пюре с первого дня — ошибка: густеющая текстура учит жевать.',
+      serve:{'6':['🥣','Шелковистое пюре или мягкие запечённые дольки-«пальчики».'],'8':['🍚','Гуще, с комочками; кубики в каше.'],'10':['🎲','Мягкие кубики — пинцетный захват.'],'12':['🍽','Кусочки из семейного блюда.']}},
+    banana:{e:'🍌',n:'Банан',cat:'Фрукты',a:'с 6 мес',al:null,choke:'средний',st:'loved',bg:['#F7EFD2','#EEDCA4'],dbg:['#3E3821','#302C1A'],
+      benefit:'Калий, витамин B6, мягкая клетчатка.',
+      cook:'Спелый, без готовки. Потемневший — в оладьи.',
+      store:'При комнатной температуре.',
+      not:'Не давать кружочками до 9 месяцев — ими легко подавиться.',
+      serve:{'6':['🍌','Целый с «ручкой»: срежьте ⅓ кожуры. Или полоски вдоль.'],'8':['〰️','Полоски вдоль, обвалянные в детской каше — не скользят.'],'10':['🫰','Кусочки для пинцетного захвата.'],'12':['🍴','Половинка — учимся кусать.']}},
+    zucchini:{e:'🥒',n:'Кабачок',cat:'Овощи',a:'с 6 мес',al:null,choke:'низкий',st:'liked',bg:['#E3EFDD','#C4DDB8'],dbg:['#2C3826','#232D1E'],
+      benefit:'Мягкая клетчатка, калий; идеальный первый овощ.',
+      cook:'Пар или тушение 8–10 минут до мягкости вилки.',
+      store:'В холодильнике до 5 дней; пюре можно заморозить.',
+      not:'Не давать сырым до 12 месяцев.',
+      serve:{'6':['🥢','Длинные мягкие брусочки на пару или пюре.'],'8':['🥣','Брусочки + пюре погуще с комочками.'],'10':['🎲','Мягкие кубики.'],'12':['🍽','Из общего блюда.']}},
+    broccoli:{e:'🥦',n:'Брокколи',cat:'Овощи',a:'с 6 мес',al:null,choke:'низкий',st:'loved',bg:['#DDEBD8','#BCD6B2'],dbg:['#2C3A28','#22301E'],
+      benefit:'Витамины C и K, фолаты; «деревце» удобно держать.',
+      cook:'На пару 8–10 минут: соцветие мягкое, «ствол» — ручка.',
+      store:'В холодильнике 3–4 дня.',
+      not:'Может давать газики — вводите утром и понемногу.',
+      serve:{'6':['🥦','Целое мягкое соцветие «за ножку».'],'8':['🌿','Соцветия поменьше.'],'10':['🎲','Мелкие кусочки.'],'12':['🍽','Как у всей семьи, без соли.']}},
+    carrot:{e:'🥕',n:'Морковь',cat:'Овощи',a:'с 6 мес',al:null,choke:'высокий (сырая)',st:'disliked',bg:['#F7E3CF','#EFC59D'],dbg:['#44311F','#352718'],
+      benefit:'Бета-каротин для зрения и кожи.',
+      cook:'Только варёная до мягкости + капля масла для усвоения.',
+      store:'В холодильнике до 2 недель.',
+      not:'Сырые кружочки и палочки — опасность удушья до 4 лет!',
+      serve:{'6':['🥢','«Пальчик», разваренный до мягкости.'],'8':['🥣','Мягкие брусочки.'],'10':['🎲','Мягкие кубики.'],'12':['🥕','Тёртая сырая — только теперь.']}},
+    oats:{e:'🌾',n:'Овсянка',cat:'Каши',a:'с 6 мес',al:'глютен',choke:'низкий',st:'liked',bg:['#F2E7D2','#E2CFA9'],dbg:['#3D3624','#302B1D'],
+      benefit:'Железо (в обогащённых), медленные углеводы.',
+      cook:'На воде или смеси, хорошо разваренная.',
+      store:'Варить свежую, готовую не хранить.',
+      not:'Следите за реакцией на глютен при первом вводе.',
+      serve:{'6':['🥣','Жидкая, с ложки.'],'8':['🍚','Гуще, с мягкими комочками.'],'10':['🥞','Густая — кусочками или оладьями.'],'12':['🍽','Семейная овсянка.']}},
+    egg:{e:'🥚',n:'Яйцо',cat:'Белок',a:'с 6 мес',al:'яйцо',choke:'низкий',st:'trying',bg:['#F4EEE1','#E7DCC4'],dbg:['#3A3529','#2E2A20'],
+      benefit:'Холин для мозга, белок, витамин D.',
+      cook:'Вкрутую или паровой омлет. Всмятку — после 3 лет.',
+      store:'Варёное — до 2 дней в холодильнике.',
+      not:'Аллерген: с 1/8 желтка утром, правило 3 дней.',
+      serve:{'6':['🥄','Омлет-полоска или желток в пюре.'],'8':['🍳','Кусочки омлета.'],'10':['🥚','Крошёное яйцо.'],'12':['🍽','Варёное дольками.']}},
+    avocado:{e:'🥑',n:'Авокадо',cat:'Фрукты',a:'с 6 мес',al:null,choke:'низкий',st:'liked',bg:['#E4EDD6','#C8DCAE'],dbg:['#303A24','#252E1B'],
+      benefit:'Полезные жиры для мозга — суперфуд первого прикорма.',
+      cook:'Спелый, без готовки: размять или дольками.',
+      store:'Половинку с косточкой — в холодильник, до суток.',
+      not:'Скользкий: обваляйте дольки в детской каше.',
+      serve:{'6':['🥑','Толстые дольки или пюре.'],'8':['〰️','Дольки в панировке из каши.'],'10':['🎲','Кубики.'],'12':['🍽','На хлебе тонким слоем.']}},
+    chicken:{e:'🍗',n:'Курица',cat:'Белок',a:'с 6 мес',al:'редко',choke:'средний',st:null,bg:['#F6E7D8','#EBCDB0'],dbg:['#3E3226','#31281D'],
+      benefit:'Белок и железо — важнейшее после 6 месяцев.',
+      cook:'Отварная/тушёная; для начала — пюре или паштет.',
+      store:'Готовую — до суток; порции можно заморозить.',
+      not:'Не давать сухую грудку крупными кусками.',
+      serve:{'6':['🥣','Паштет или крупная «ножка» под присмотром.'],'8':['🍗','Мелко нарубленная, тефтельки.'],'10':['🎲','Мягкие кусочки, фрикадельки.'],'12':['🍽','Из общего блюда.']}},
+    salmon:{e:'🐟',n:'Лосось',cat:'Белок',a:'с 8 мес',al:'рыба',choke:'низкий',st:null,bg:['#F9E4DC','#F0C3B2'],dbg:['#402D26','#33231D'],
+      benefit:'Омега-3 для мозга — один из самых ценных продуктов.',
+      cook:'На пару или запечь, тщательно убрать все кости.',
+      store:'Готовый — до суток.',
+      not:'Аллерген: утром, понемногу, правило 3 дней.',
+      serve:{'6':['⏳','Рано — рыбу вводим с 8 месяцев.'],'8':['🐟','Волокна без костей, с пюре.'],'10':['🎲','Мягкие хлопья кусочками.'],'12':['🍽','Рыбные котлетки.']}},
+    peanut:{e:'🥜',n:'Арахис',cat:'Аллергены',a:'с 6 мес (паста)',al:'сильный',choke:'высокий (цельный)',st:null,bg:['#F3E6D0','#E5CBA4'],dbg:['#3C3222','#2F281B'],
+      benefit:'Ранний ввод снижает риск аллергии (исследование LEAP).',
+      cook:'Только паста без сахара и соли, разведённая в каше.',
+      store:'Паста — по этикетке.',
+      not:'Цельные орехи запрещены до 4–5 лет — риск удушья!',
+      serve:{'6':['🥄','1/4 ч. л. разведённой пасты в каше, утром.'],'8':['🥣','1/2 ч. л. 2–3 раза в неделю.'],'10':['🍞','Тонкий слой на полоске хлеба.'],'12':['🍽','Паста регулярно; цельные — после 4–5 лет.']}},
+    cottage:{e:'🥛',n:'Творог',cat:'Белок',a:'с 7 мес',al:'молоко',choke:'низкий',st:null,bg:['#F3F0E8','#E5DFCE'],dbg:['#37342C','#2B2922'],
+      benefit:'Кальций и белок для костей и зубов.',
+      cook:'Детский, без сахара; развести смесью до мягкости.',
+      store:'Открытый — не более суток.',
+      not:'«Взрослые» сладкие сырки — нет.',
+      serve:{'6':['⏳','Пока рано — с 7 месяцев.'],'8':['🥣','Мягкий, разведённый: 2–3 ч. л.'],'10':['🥄','Погуще, с кусочками фруктов.'],'12':['🍽','До 50 г в день.']}},
+  };
+  const ST_DOT={loved:'var(--terra)',liked:'var(--accent)',trying:'var(--warn)',disliked:'#8A857D'};
+  const CATS=['Все','Овощи','Фрукты','Каши','Белок','Аллергены','Не пробовали'];
+  let curCat='Все';
+  const dark=()=>document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);
+
+  function renderCats(){
+    document.getElementById('food-cats').innerHTML=CATS.map(c=>
+      `<button class="chip ${c===curCat?'on':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+  }
+  function setCat(c){curCat=c; renderCats(); renderFoodGrid();}
+  function renderFoodGrid(){
+    const grid=document.getElementById('food-grid'); if(!grid) return;
+    const q=(document.getElementById('food-search')?.value||'').toLowerCase().trim();
+    grid.innerHTML='';
+    for(const [id,f] of Object.entries(FOODS)){
+      if(q && !f.n.toLowerCase().includes(q)) continue;
+      if(curCat==='Не пробовали'){ if(f.st) continue; }
+      else if(curCat==='Аллергены'){ if(!f.al||f.al==='редко') continue; }
+      else if(curCat!=='Все' && f.cat!==curCat) continue;
+      const bg=dark()?f.dbg:f.bg;
+      const b=document.createElement('button'); b.className='food'; b.onclick=()=>openFood(id);
+      b.innerHTML=`<div class="pic" style="background:radial-gradient(circle at 32% 28%, ${bg[0]}, ${bg[1]})">${f.e}</div>
+        <div class="meta"><div class="name">${f.st?`<span class="dot" style="background:${ST_DOT[f.st]}"></span>`:''}${f.n}${f.al&&f.al!=='редко'?' <span class="allergen-tag">аллерген</span>':''}</div>
+        <div class="age">${f.a}</div></div>`;
+      grid.appendChild(b);
+    }
+  }
+
+  // ── карточка продукта: подача по 4 возрастам ──
+  let current='pumpkin', curAge='6';
+  const AGE_LBL={'6':'6–7','8':'8–9','10':'10–11','12':'12+'};
+  function openFood(id){
+    current=id; curAge='6';
+    renderProduct();
+    document.getElementById('detail').classList.add('open');
+    document.querySelector('#detail .detail-scroll').scrollTop=0;
+  }
+  function renderProduct(){
+    const f=FOODS[current]; const bg=dark()?f.dbg:f.bg;
+    document.getElementById('d-emoji').textContent=f.e;
+    document.getElementById('d-hero').style.background=`radial-gradient(circle at 30% 25%, ${bg[0]}, ${bg[1]})`;
+    document.getElementById('sheet-title').textContent=f.n+' — отметить статус';
+    const s=f.serve[curAge];
+    document.getElementById('d-body').innerHTML=`
+      <h2>${f.n}</h2>
+      <span class="pill-note">👶 ${f.a} · аллерген: ${f.al||'нет'} · риск подавиться: ${f.choke}</span>
+      <div class="section-t">Подача по возрасту</div>
+      <div class="age-seg">${Object.keys(f.serve).map(a=>
+        `<button class="${a===curAge?'on':''}" onclick="setAge('${a}')">${AGE_LBL[a]} мес</button>`).join('')}</div>
+      <div class="card" style="display:flex; gap:14px; align-items:center;">
+        <div style="font-size:38px; flex:none; width:64px; height:64px; border-radius:16px; background:var(--elev); display:flex; align-items:center; justify-content:center;">${s[0]}</div>
+        <div class="sub" style="margin:0; font-size:13.5px; color:var(--text)">${s[1]}</div>
+      </div>
+      <div class="section-t">О продукте</div>
+      <div class="note"><span class="ne">💚</span><span><b>Польза:</b> ${f.benefit}</span></div>
+      <div class="note"><span class="ne">👩‍🍳</span><span><b>Как приготовить:</b> ${f.cook}</span></div>
+      <div class="note"><span class="ne">🧊</span><span><b>Как хранить:</b> ${f.store}</span></div>
+      <div class="note alert"><span class="ne">⚠️</span><span><b>Когда нельзя:</b> ${f.not}</span></div>
+      <div class="note"><span class="ne">🔁</span><span><b>Если не понравилось:</b> предлагайте снова через 3–4 дня, до 10–15 раз, без давления. Смешайте со знакомым вкусом.</span></div>`;
+  }
+  function setAge(a){curAge=a; renderProduct();}
+  function closeFood(){document.getElementById('detail').classList.remove('open');}
+
+  // ── рецепты + «что есть дома» ──
+  const RECIPES=[
+    {e:'🎃',n:'Тыквенное пюре с яблоком',age:'6+',t:'15 мин',ing:['тыква','яблоко'],bg:'var(--sand-soft)',
+      steps:['Тыкву и яблоко очистить, нарезать кубиками.','На пару или в сотейнике с водой — 12–15 минут до мягкости.','Взбить блендером до шелковистости. Для 6 мес — пожиже (добавьте грудное молоко или смесь).'],
+      note:'Заморозьте в формах для льда — до 3 месяцев, кубик = порция.'},
+    {e:'🥣',n:'Овсянка с бананом',age:'6+',t:'10 мин',ing:['овсянка','банан'],bg:'var(--accent-soft)',
+      steps:['2 ст. л. хлопьев + 100 мл воды, варить 5–7 минут.','Половину банана размять вилкой, вмешать в тёплую кашу.','Для 6 мес — протереть; с 8 мес оставляйте мягкие комочки.'],
+      note:'Без сахара: банан даёт естественную сладость.'},
+    {e:'🥦',n:'Крем-суп из брокколи и картофеля',age:'7+',t:'20 мин',ing:['брокколи','картофель'],bg:'var(--accent-soft)',
+      steps:['Картофель кубиками — в кипящую воду на 10 минут.','Добавить соцветия брокколи, ещё 7–8 минут.','Взбить с отваром до крема, капля оливкового масла.'],
+      note:'Не солим до года — почки скажут спасибо.'},
+    {e:'🫘',n:'Пюре из чечевицы — железо!',age:'7+',t:'25 мин',ing:['чечевица','кабачок'],bg:'var(--terra-soft)',
+      steps:['Красную чечевицу промыть, варить 15 минут.','Добавить кубики кабачка, ещё 8 минут.','Взбить; консистенция густой сметаны.'],
+      note:'Железо усваивается лучше с витамином C — подайте с яблочным пюре.'},
+    {e:'🍳',n:'Паровой омлет с творогом',age:'8+',t:'12 мин',ing:['яйцо','творог'],bg:'var(--sand-soft)',
+      steps:['Яйцо взбить с 2 ст. л. творога.','В силиконовую форму — и на пар 10 минут.','Остудить, нарезать полосками для самостоятельного захвата.'],
+      note:'Оба аллергена уже введены? Тогда смело.'},
+    {e:'🍗',n:'Куриные митболы на пару',age:'9+',t:'25 мин',ing:['курица','гречка'],bg:'var(--sand-soft)',
+      steps:['Куриное филе + варёная гречка — в блендер.','Скатать шарики размером с грецкий орех.','На пару 15–18 минут. Проверьте мягкость: должны разминаться пальцами.'],
+      note:'Порцию можно заморозить сырыми — готовьте по мере надобности.'},
+    {e:'🥞',n:'Банановые оладьи без сахара',age:'9+',t:'15 мин',ing:['банан','яйцо','овсянка'],bg:'var(--accent-soft)',
+      steps:['Банан размять + яйцо + 3 ст. л. молотой овсянки.','Жарить на сухой антипригарной сковороде по 2 минуты с каждой стороны.','Остудить до тёплого, нарезать полосками.'],
+      note:'Идеальный завтрак для тренировки самостоятельной еды.'},
+    {e:'🐟',n:'Рыбные котлетки',age:'10+',t:'25 мин',ing:['лосось','морковь'],bg:'var(--terra-soft)',
+      steps:['Лосось проверить на кости — дважды.','Смолоть с варёной морковью, сформовать котлетки.','На пару 12–15 минут.'],
+      note:'Рыба — 2 раза в неделю: омега-3 для мозга.'},
+  ];
+  const PANTRY=['банан','овсянка','творог','яйцо','кабачок','яблоко','курица','гречка','морковь','лосось','тыква','брокколи'];
+  let pantrySel=new Set(['банан','овсянка','яйцо']);
+  function renderPantry(){
+    document.getElementById('pantry').innerHTML=PANTRY.map(p=>
+      `<button class="chip ${pantrySel.has(p)?'on':''}" onclick="togglePantry('${p}')">${p}</button>`).join('');
+    const list=RECIPES
+      .map((r,idx)=>({...r,idx,hit:r.ing.filter(i=>pantrySel.has(i)).length}))
+      .filter(r=>pantrySel.size===0||r.hit>0)
+      .sort((a,b)=>(b.hit/b.ing.length)-(a.hit/a.ing.length));
+    const el=document.getElementById('recipe-list');
+    el.innerHTML='';
+    for(const r of list){
+      const b=document.createElement('button'); b.className='recipe';
+      b.onclick=()=>openRecipe(r.idx);
+      b.innerHTML=`<div class="rp" style="background:${r.bg}">${r.e}</div>
+        <div class="grow"><div class="rn">${r.n}</div>
+        <div class="rm"><span class="tag green">${r.age} мес</span><span class="tag">${r.t}</span>${r.ing.map(i=>`<span class="tag ${pantrySel.has(i)?'green':''}">${pantrySel.has(i)?'✓ ':''}${i}</span>`).join('')}</div></div>`;
+      el.appendChild(b);
+    }
+    if(!list.length) el.innerHTML='<div class="sub" style="text-align:center; padding:10px">Отметьте, что есть дома — подберём рецепты</div>';
+  }
+  function togglePantry(p){pantrySel.has(p)?pantrySel.delete(p):pantrySel.add(p); renderPantry();}
+
+  // ── умелки ──
+  const SKILLS=[
+    {n:'Перевернулся',done:true,d:'12 марта · 📷 фото добавлено'},
+    {n:'Сидит с опорой',done:true,d:'28 июня · 🎥 видео'},
+    {n:'Сидит без опоры',done:false,d:'обычно 6–9 мес'},
+    {n:'Ползёт',done:false,d:'обычно 7–10 мес'},
+    {n:'Пинцетный захват',done:false,d:'обычно 8–11 мес'},
+    {n:'Машет «пока-пока»',done:false,d:'обычно 8–12 мес'},
+  ];
+  function renderSkills(){
+    document.getElementById('skill-list').innerHTML=SKILLS.map((s,i)=>`
+      <div class="check ${s.done?'on':''}" onclick="toggleSkill(${i})">
+        <div class="box">✓</div>
+        <span class="grow"><span class="txt">${s.n}</span><div class="meta2">${s.d}</div></span>
+        <span class="cam">${s.done?'🎞':'📷'}</span>
+      </div>`).join('');
+  }
+  function toggleSkill(i){
+    const s=SKILLS[i];
+    if(!s.done){ s.done=true; s.d='сегодня · добавьте фото 📷';
+      toast('🌟','Новая умелка!',s.n+' — сохранено в дневник');
+      confetti(['🌟','✨','💚','🎉']);
+    } else { toast('✓',s.n,s.d); }
+    renderSkills();
+  }
+
+  // ── AI-карточки ──
+  const AI={
+    today:{e:'☀️',t:'Что сегодня с малышом?',d:'AI собрал утреннюю сводку: возраст 6 мес 12 дней · сон за ночь 10:20 · настроение ровное.',
+      body:`<div class="rule"><span class="re">🧠</span><div><b>Идёт 5-й скачок — «мир взаимосвязей»</b><p>Может быть «ручным» и тревожиться без вас. Это норма и это пройдёт.</p></div></div>
+        <div class="rule"><span class="re">🎃</span><div><b>Прикорм: повторите тыкву</b><p>Вчера была первая проба — сегодня день 2. Новое (кукурузу) — послезавтра.</p></div></div>
+        <div class="rule"><span class="re">🎯</span><div><b>Игра дня: «Где мишка?»</b><p>Прятки — лучшая игра во время этого скачка: учат «мама исчезает и возвращается».</p></div></div>
+        <div class="rule"><span class="re">📅</span><div><b>Через 12 дней — прививка</b><p>Визит 6 месяцев. Если появится насморк — не страшно, перенос гибкий.</p></div></div>`},
+    sleep:{e:'😴',t:'Анализ сна',d:'AI получил: 6 мес 12 дней · дневной сон 2:40 за 3 дня · ночью 8 пробуждений · новое: брокколи · настроение капризное.',
+      body:`<div class="note"><span class="ne">🔍</span><span><b>Что видно:</b> последние 3 дня сон стал более фрагментированным — 8 ночных пробуждений против обычных 2–3.</span></div>
+        <div class="section-t">Возможные причины</div>
+        <div class="rule"><span class="re">📈</span><div><b>5-й скачок развития</b><p>Идёт прямо сейчас — самая вероятная причина. Обычно 2–3 недели.</p></div></div>
+        <div class="rule"><span class="re">🥦</span><div><b>Новый продукт</b><p>Брокколи введена 3 дня назад — совпадает по времени. Понаблюдайте за животиком.</p></div></div>
+        <div class="rule"><span class="re">😪</span><div><b>Перегул</b><p>Вчера окно бодрствования доходило до 3 ч при норме 2,5.</p></div></div>
+        <div class="section-t">Что попробовать сегодня</div>
+        <div class="note"><span class="ne">✅</span><span>Уложить на 15 минут раньше · затемнить комнату на дневные сны · больше контакта днём.</span></div>
+        <div class="note alert"><span class="ne">🩺</span><span><b>К врачу, если:</b> температура, отказ от еды и питья, плач не успокаивается более 2 часов.</span></div>
+        <div class="note"><span class="ne">💚</span><span><b>А когда сон в порядке</b> — карточка не ищет проблему: «Ритм стабильный, 1–2 пробуждения — норма возраста» + тренд за месяц.</span></div>`},
+    food:{e:'🍽',t:'Идеи прикорма',d:'AI учёл: 10 введённых продуктов · без реакций · цель — железо и разнообразие.',
+      body:`<div class="section-t">На этой неделе</div>
+        <div class="rule"><span class="re">🫘</span><div><b>Чечевица — приоритет</b><p>В меню давно нет железа. Пюре со знакомым кабачком — мягкое знакомство.</p></div></div>
+        <div class="rule"><span class="re">🌽</span><div><b>Кукуруза</b><p>Продолжаем жёлтые овощи после тыквы — высокая вероятность успеха.</p></div></div>
+        <div class="rule"><span class="re">🥕</span><div><b>Повторить морковь</b><p>«Не понравилось» 10 дней назад — норма до 15 попыток. Попробуйте запечённой.</p></div></div>
+        <div class="note"><span class="ne">💡</span><span>Рецепты под каждую идею — в разделе Питание → Рецепты.</span></div>`},
+    games:{e:'🎯',t:'Игры по возрасту',d:'Подобрано на 6 мес 12 дней с учётом текущего скачка (мир взаимосвязей).',
+      body:`<div class="rule"><span class="re">🧸</span><div><b>«Где спрятался мишка?»</b><p>Постоянство объекта — ключевой навык прямо сейчас. 5 минут.</p></div></div>
+        <div class="rule"><span class="re">🪞</span><div><b>Кто в зеркале?</b><p>Называйте части лица — самосознание + пассивный словарь.</p></div></div>
+        <div class="rule"><span class="re">🎵</span><div><b>Перекличка слогов</b><p>Повторяйте его «ба-ба» и добавляйте новый слог — первый диалог.</p></div></div>`},
+    mood:{e:'🥺',t:'Почему капризничает',d:'AI учёл: скачок 5 · новая еда · сон фрагментирован · зубов пока нет.',
+      body:`<div class="section-t">Возможные причины</div>
+        <div class="rule"><span class="re">📈</span><div><b>Скачок развития (наиболее вероятно)</b><p>Мозг перестраивается: тревога разлуки, «ручной» период. Норма.</p></div></div>
+        <div class="rule"><span class="re">😴</span><div><b>Недосып</b><p>Фрагментированная ночь → капризы днём. Сегодня — приоритет снам.</p></div></div>
+        <div class="rule"><span class="re">🦷</span><div><b>Зубы?</b><p>Проверьте дёсны: набухание, слюни, всё в рот.</p></div></div>
+        <div class="note alert"><span class="ne">🩺</span><span><b>К врачу:</b> плач больше 2 часов без остановки, отказ от еды и питья, температура выше 38.</span></div>`},
+    day:{e:'🗓',t:'Составь день',d:'Режим на сегодня по возрасту и вчерашнему сну (подъём 7:20).',
+      body:`<div class="card"><div class="meal-line"><div class="t">7:20</div><div class="grow"><b style="font-size:14px">Подъём + ГВ/смесь</b></div></div>
+        <div class="meal-line"><div class="t">8:30</div><div class="grow"><b style="font-size:14px">Завтрак: овсянка + банан</b></div></div>
+        <div class="meal-line"><div class="t">9:50</div><div class="grow"><b style="font-size:14px">Сон 1 · ~1,5 ч</b><div class="sub">чуть раньше обычного — компенсируем ночь</div></div></div>
+        <div class="meal-line"><div class="t">12:10</div><div class="grow"><b style="font-size:14px">Обед: тыква (повтор)</b></div></div>
+        <div class="meal-line"><div class="t">13:40</div><div class="grow"><b style="font-size:14px">Сон 2 · ~1,5 ч</b></div></div>
+        <div class="meal-line"><div class="t">16:30</div><div class="grow"><b style="font-size:14px">Игры + прогулка</b></div></div>
+        <div class="meal-line"><div class="t">19:30</div><div class="grow"><b style="font-size:14px">Ритуал: ванна → книжка → ночь</b></div></div></div>
+        <div class="note"><span class="ne">💡</span><span>Это ориентир, не расписание поезда. Признаки усталости важнее часов.</span></div>`},
+  };
+  function openAI(type){
+    const a=AI[type];
+    document.getElementById('ai-e').textContent=a.e;
+    document.getElementById('ai-t').textContent=a.t;
+    document.getElementById('ai-d').textContent=a.d;
+    document.getElementById('ai-body').innerHTML=a.body+
+      `<div class="pill-note" style="margin-bottom:10px">✨ Бесплатно: карточка «Сегодня» — ежедневно, остальные 2 из 3 на этой неделе</div>
+       <button class="btn btn-soft" onclick="openPaywall()" style="margin-bottom:8px">Безлимит AI — в bubka+</button>
+       <div class="sub" style="text-align:center; margin-bottom:20px">AI не ставит диагнозы и не назначает лечение. При тревожных симптомах обратитесь к врачу.</div>`;
+    document.getElementById('ai').classList.add('open');
+    document.querySelector('#ai .detail-scroll').scrollTop=0;
+  }
+  function closeAI(){document.getElementById('ai').classList.remove('open');}
+
+  // ── карточки ленты «Сегодня с малышом» (оверлей с «назад») ──
+  const INFO={
+    weather:{e:'🌤️',t:'Как одеть на +4°',d:'Сейчас +4°, к прогулке в 16:30 потеплеет до +6°, без осадков.',
+      body:`<div class="rule"><span class="re">1️⃣</span><div><b>Боди с длинным рукавом</b><p>Хлопок, первый слой — впитывает влагу.</p></div></div>
+        <div class="rule"><span class="re">2️⃣</span><div><b>Флисовый комбинезон</b><p>Средний слой — держит тепло, не парит.</p></div></div>
+        <div class="rule"><span class="re">3️⃣</span><div><b>Шапка + плед в коляску</b><p>Ветра нет, но на обратном пути похолодает.</p></div></div>
+        <div class="note"><span class="ne">💡</span><span><b>Правило:</b> одевайте как себя + один слой. Проверка — тёплая шея, а не руки.</span></div>`},
+    leap:{e:'🧠',t:'5-й скачок · «мир взаимосвязей»',d:'Началcя около недели назад · обычно длится 2–3 недели.',
+      body:`<div class="rule"><span class="re">👀</span><div><b>Что происходит</b><p>Малыш начинает понимать расстояние: «мама отошла — мама далеко». Отсюда тревога и «ручной» период.</p></div></div>
+        <div class="rule"><span class="re">🌟</span><div><b>Что появится после</b><p>Попытки сидеть, перекладывание игрушки из руки в руку, лепет с интонацией.</p></div></div>
+        <div class="rule"><span class="re">🤍</span><div><b>Как помочь</b><p>Больше контакта, прятки «ку-ку», уходите со словами и возвращайтесь — так строится доверие.</p></div></div>
+        <button class="btn btn-soft" onclick="closeInfo();gotoSeg('scr-dev','pg-dv-leaps')" style="margin-bottom:20px">Календарь скачков ›</button>`},
+    game:{e:'🎯',t:'«Где спрятался мишка?»',d:'Игра дня · 5 минут · без инвентаря · развивает постоянство объекта.',
+      body:`<div class="rule"><span class="re">1️⃣</span><div><b>Покажите игрушку</b><p>Дайте рассмотреть и потрогать любимого мишку.</p></div></div>
+        <div class="rule"><span class="re">2️⃣</span><div><b>Спрячьте под плед на глазах</b><p>Край пусть торчит — так проще для первого раза.</p></div></div>
+        <div class="rule"><span class="re">3️⃣</span><div><b>Спросите: «Где мишка?»</b><p>Малыш стянет плед — бурно радуйтесь вместе. Повторите 3–4 раза.</p></div></div>
+        <div class="note"><span class="ne">🧠</span><span><b>Зачем:</b> во время 5-го скачка малыш учится, что исчезнувшее — не исчезло навсегда. Это же снижает тревогу разлуки.</span></div>
+        <button class="btn btn-primary" onclick="closeInfo();agendaDone('ag-walk');toast('🎯','Поиграли!','Записано в дневник развития');confetti(['🧸','✨','🎯'])" style="margin-bottom:8px">Поиграли ✓</button>
+        <button class="btn btn-soft" onclick="closeInfo();gotoSeg('scr-dev','pg-dv-today')" style="margin-bottom:20px">Все игры по возрасту ›</button>`},
+    foodidea:{e:'🫘',t:'Чечевица — пора познакомиться',d:'В меню 10 продуктов, но давно нет источника железа. Красная чечевица — самая нежная.',
+      body:`<div class="rule"><span class="re">🥣</span><div><b>Как дать в первый раз</b><p>Пюре: чечевица + знакомый кабачок. 1–2 чайные ложки в обед.</p></div></div>
+        <div class="rule"><span class="re">👀</span><div><b>За чем следить</b><p>Бобовые могут дать газики — начинайте с малого и наблюдайте животик.</p></div></div>
+        <button class="btn btn-primary" onclick="closeInfo();gotoSeg('scr-food','pg-fd-recipes')" style="margin-bottom:8px">Рецепт: чечевица с кабачком ›</button>
+        <button class="btn btn-soft" onclick="closeInfo();gotoSeg('scr-food','pg-fd-products')" style="margin-bottom:20px">Каталог продуктов ›</button>`},
+    vax:{e:'💉',t:'Визит 6 месяцев · 18 июля',d:'Через 12 дней · АКДС (3-я) + гепатит B (3-я) + полиомиелит.',
+      body:`<div class="rule"><span class="re">📏</span><div><b>Заодно — рост и вес</b><p>Попросите измерить: обновим график ВОЗ, дома мерить сложнее.</p></div></div>
+        <div class="rule"><span class="re">📄</span><div><b>Что взять</b><p>Полис, сертификат прививок. Вопросы к педиатру запишите заранее — в bubka есть PDF-сводка за месяц.</p></div></div>
+        <div class="rule"><span class="re">🤧</span><div><b>Если малыш приболеет</b><p>Насморк без температуры — не всегда отвод. Решает врач, перенос — это нормально.</p></div></div>
+        <button class="btn btn-primary" onclick="closeInfo();toast('🔔','Напомним 16 июля','За 2 дня до визита')" style="margin-bottom:8px">🔔 Напомнить за 2 дня</button>
+        <button class="btn btn-soft" onclick="closeInfo();gotoSeg('scr-health','pg-hl-vax')" style="margin-bottom:20px">Календарь прививок ›</button>`},
+    tip:{e:'❤️',t:'День открытой кружки',d:'6–7 месяцев — лучшее время первый раз попробовать пить не из бутылочки.',
+      body:`<div class="rule"><span class="re">🥛</span><div><b>Как попробовать</b><p>Маленькая кружка, на дне 1–2 см воды. Поднесите сами — малыш сделает пару глотков (и обольётся, это план).</p></div></div>
+        <div class="rule"><span class="re">📷</span><div><b>Поймайте момент</b><p>Первое «взрослое» питьё — отличный кадр для дневника.</p></div></div>
+        <button class="btn btn-primary" onclick="closeInfo();toast('📷','Фото сохранено','Добавлено в дневник — умелка «Пьёт из кружки»');confetti(['🥛','📷','✨'])" style="margin-bottom:20px">📷 Сделали! Фото в дневник</button>`},
+    mom:{e:'💛',t:'Минутка для себя',d:'Малыш уснёт в 13:40 — первые 4 минуты пусть будут только ваши.',
+      body:`<div class="rule"><span class="re">☕️</span><div><b>Не бросайтесь к делам</b><p>Горячий чай, окно, тишина. Посуда подождёт четыре минуты — правда.</p></div></div>
+        <div class="rule"><span class="re">🌬</span><div><b>Дыхание 4-7-8</b><p>Вдох на 4 счёта, пауза 7, выдох 8. Три круга — и нервная система скажет спасибо.</p></div></div>
+        <div class="note"><span class="ne">🤍</span><span>Отдохнувшая мама — лучшее, что может случиться с малышом сегодня.</span></div>
+        <button class="btn btn-soft" onclick="closeInfo();openMom()" style="margin-bottom:20px">💛 Забота о маме ›</button>`},
+  };
+  function openInfo(type){
+    const c=INFO[type];
+    document.getElementById('info-e').textContent=c.e;
+    document.getElementById('info-t').textContent=c.t;
+    document.getElementById('info-d').textContent=c.d;
+    document.getElementById('info-body').innerHTML=c.body;
+    document.getElementById('info').classList.add('open');
+    document.querySelector('#info .detail-scroll').scrollTop=0;
+  }
+  function closeInfo(){document.getElementById('info').classList.remove('open');}
+
+  // ── SOS деталь ──
+  function openSOS(){closeDrawer(); document.getElementById('sosd').classList.add('open'); document.querySelector('#sosd .detail-scroll').scrollTop=0;}
+  function closeSOSd(){document.getElementById('sosd').classList.remove('open');}
+
+  // ── прививки ──
+  function vaxDone(){
+    document.getElementById('vax-actions').innerHTML='<span class="tag green" style="padding:9px 13px; font-size:12.5px">✓ Сделана · 6 июля · записано в дневник здоровья</span>';
+    toast('💉','Прививки отмечены','Визит 6 мес выполнен · следующий — ККП в 12 мес');
+    confetti(['💚','✨','🛡','🌟']);
+  }
+  function vaxDelay(){
+    document.getElementById('vax-actions').innerHTML='<span class="tag" style="padding:9px 13px; font-size:12.5px">⏸ Перенесена · напомним 25 июля</span>';
+    toast('📅','Перенесено','Интервалы гибкие: календарь продолжается, а не начинается заново');
+  }
+
+  // ── пейволл ──
+  function openPaywall(){
+    const p=document.getElementById('paywall');
+    p.classList.add('open'); p.querySelector('.detail-scroll').scrollTop=0;
+  }
+  function closePaywall(){document.getElementById('paywall').classList.remove('open');}
+  function pickPlan(el){
+    el.parentElement.querySelectorAll('.pay-opt').forEach(o=>o.classList.remove('on'));
+    el.classList.add('on');
+  }
+
+  // ── чек-листы ──
+  function toggleCheck(el){
+    el.classList.toggle('on');
+    if(el.classList.contains('on')) toast('✅','Отмечено','Пункт выполнен — прогресс сохранён');
+  }
+
+  // ── таймер сна ──
+  let sleeping=false, sleepStart=null, sleepInt=null;
+  function toggleSleep(forceStart){
+    if(forceStart===true && sleeping) return;
+    sleeping = forceStart===true ? true : !sleeping;
+    const btn=document.getElementById('sleep-btn'), time=document.getElementById('sleep-time'),
+          hint=document.getElementById('sleep-hint'), label=document.getElementById('sleep-label');
+    if(sleeping){
+      sleepStart=Date.now();
+      heroExpand(true);
+      document.getElementById('hero-now').classList.add('sleeping');
+      btn.textContent='Завершить сон'; btn.style.background='var(--terra)';
+      document.getElementById('sleep-btn-sm').textContent='Стоп';
+      label.textContent='Спит'; label.style.color='var(--accent)';
+      hint.innerHTML='Таймер идёт · спокойных снов 🤍';
+      toast('🌙','Сон начался','Таймер запущен');
+      sleepInt=setInterval(()=>{
+        const s=Math.floor((Date.now()-sleepStart)/1000);
+        time.textContent=`${String(Math.floor(s/60))}:${String(s%60).padStart(2,'0')}`;
+      },1000);
+      time.textContent='0:00';
+    } else {
+      clearInterval(sleepInt);
+      const mins=Math.max(1,Math.round((Date.now()-sleepStart)/60000));
+      heroExpand(dayMode!=='day');
+      document.getElementById('hero-now').classList.remove('sleeping');
+      btn.textContent='Начать сон'; btn.style.background='';
+      document.getElementById('sleep-btn-sm').textContent='Сон ▶';
+      label.textContent='Бодрствует'; label.style.color='var(--dusk)';
+      time.textContent='0:01';
+      hint.innerHTML='Сон записан · следующее окно <b>≈ через 2 ч 30 мин</b>';
+      toast('😴','Сон записан',`Длительность: ${mins} мин · добавлено в дневник`);
+      agendaDone('ag-sleep');
+    }
+  }
+
+  // ── sheets ──
+  function openSheet(){document.getElementById('scrim').classList.add('open');document.getElementById('sheet').classList.add('open');}
+  function closeSheet(){document.getElementById('scrim').classList.remove('open');document.getElementById('sheet').classList.remove('open');}
+  function openRecords(){document.getElementById('scrim').classList.add('open');document.getElementById('records').classList.add('open');}
+  function closeRecords(){document.getElementById('scrim').classList.remove('open');document.getElementById('records').classList.remove('open');}
+  function recLog(e,msg){
+    closeRecords();
+    const now=new Date();
+    JOURNAL.unshift({t:`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`, e, n:msg.split(' ')[0], d:msg});
+    renderJournal();
+    toast(e,msg,'Добавлено в журнал · открыть: День в цифрах → журнал');
+  }
+
+  // ── журнал дня ──
+  const JOURNAL=[
+    {t:'12:10',e:'🎃',n:'Обед',d:'Тыква · 40 г · первая проба'},
+    {t:'11:20',e:'💧',n:'Вода',d:'30 мл'},
+    {t:'11:05',e:'🩲',n:'Подгузник',d:'мокрый · норма'},
+    {t:'10:40',e:'😴',n:'Сон 1 закончился',d:'1 ч 30 мин · уснул за 10 минут'},
+    {t:'8:30',e:'🥣',n:'Завтрак',d:'Овсянка + банан · 60 г · съел всё'},
+    {t:'7:30',e:'🤱',n:'Грудь',d:'левая · 15 мин'},
+    {t:'7:20',e:'🌅',n:'Подъём',d:'проснулся сам, в хорошем настроении'},
+  ];
+  function renderJournal(){
+    const el=document.getElementById('journal-list'); if(!el) return;
+    el.innerHTML=JOURNAL.map((r,i)=>`
+      <div class="j-row" id="jr-${i}">
+        <div class="j-main" onclick="jToggle(${i})">
+          <div class="jt">${r.t}</div><div class="je">${r.e}</div>
+          <div class="grow"><div class="jn">${r.n}</div><div class="jd">${r.d}</div></div>
+          <span style="color:var(--text2); font-size:13px">···</span>
+        </div>
+        <div class="j-act">
+          <button onclick="jEdit(${i});event.stopPropagation()">🕐 −15 мин</button>
+          <button class="del" onclick="jDel(${i});event.stopPropagation()">Удалить</button>
+        </div>
+      </div>`).join('')
+      + `<div class="sub" style="text-align:center; padding:6px 0 16px">Записи синхронизируются с папой и бабушкой мгновенно</div>`;
+  }
+  function jToggle(i){document.getElementById('jr-'+i).classList.toggle('open');}
+  function jEdit(i){
+    const r=JOURNAL[i]; const [h,m]=r.t.split(':').map(Number);
+    const d=new Date(); d.setHours(h,m-15);
+    r.t=`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    renderJournal(); toast('🕐','Время изменено',`${r.n} → ${r.t}`);
+  }
+  function jDel(i){
+    const r=JOURNAL.splice(i,1)[0];
+    renderJournal(); toast('🗑','Запись удалена',`${r.n} · ${r.t}`);
+  }
+  function openJournal(){renderJournal(); document.getElementById('journal').classList.add('open'); document.querySelector('#journal .detail-scroll').scrollTop=0;}
+  function closeJournal(){document.getElementById('journal').classList.remove('open');}
+
+  // ── итог дня ──
+  function openEvening(){document.getElementById('evening').classList.add('open'); document.querySelector('#evening .detail-scroll').scrollTop=0;}
+  function closeEvening(){document.getElementById('evening').classList.remove('open');}
+
+  // ── забота о маме ──
+  function openMom(){document.getElementById('mom').classList.add('open'); document.querySelector('#mom .detail-scroll').scrollTop=0;}
+  function closeMom(){document.getElementById('mom').classList.remove('open');}
+  function pickMood(el,msg){
+    document.querySelectorAll('#mom-mood button').forEach(b=>b.classList.remove('on'));
+    el.classList.add('on');
+    toast('💛','Записано',msg);
+  }
+
+  // ── рецепт ──
+  function openRecipe(i){
+    const r=RECIPES[i];
+    document.getElementById('r-emoji').textContent=r.e;
+    document.getElementById('r-hero').style.background=r.bg;
+    document.getElementById('r-body').innerHTML=`
+      <h2>${r.n}</h2>
+      <span class="pill-note">👶 с ${r.age} мес · ⏱ ${r.t}</span>
+      <div class="section-t">Ингредиенты</div>
+      <div class="row2" style="display:flex; gap:6px; flex-wrap:wrap">${r.ing.map(i=>`<span class="tag ${pantrySel.has(i)?'green':''}">${pantrySel.has(i)?'✓ ':''}${i}</span>`).join('')}</div>
+      <div class="section-t">Шаги</div>
+      ${r.steps.map((s,j)=>`<div class="rule"><span class="re" style="color:var(--accent); font-weight:750; font-size:17px">${j+1}</span><div><p style="margin-top:2px; font-size:13.5px; color:var(--text)">${s}</p></div></div>`).join('')}
+      <div class="note"><span class="ne">💡</span><span>${r.note}</span></div>`;
+    document.getElementById('recipe').classList.add('open');
+    document.querySelector('#recipe .detail-scroll').scrollTop=0;
+  }
+  function closeRecipe(){document.getElementById('recipe').classList.remove('open');}
+
+  // ── онбординг ──
+  const ONB_TOTAL=7;
+  let onbStep=1, onbName='Миша', onbGirl=false;
+  function pickOpt(el){
+    el.parentElement.querySelectorAll('.onb-opt').forEach(o=>o.classList.remove('on'));
+    el.classList.add('on');
+  }
+  function pickMulti(el){ el.classList.toggle('on'); }
+  function pickSeg(el){ [...el.parentElement.children].forEach(b=>b.classList.remove('on')); el.classList.add('on'); }
+  function pickGender(el,girl){ pickSeg(el); onbGirl=girl; }
+  function pickBorn(el,early){ pickOpt(el); document.getElementById('onb-pdr').style.display=early?'block':'none'; }
+  function onbCity(){ document.getElementById('onb-city').value='Москва'; toast('📍','Город определён','Москва — погода и сезонные советы подключены'); }
+  function onbShow(){
+    document.querySelectorAll('.onb-step').forEach(s=>s.classList.remove('on'));
+    document.getElementById('onb-'+onbStep).classList.add('on');
+    document.querySelectorAll('#onb-dots span').forEach((d,i)=>d.classList.toggle('on',i===onbStep-1));
+    document.getElementById('onb-back').style.display=onbStep>1?'flex':'none';
+    document.getElementById('onb-next').textContent=onbStep===ONB_TOTAL?'Готово — в приложение 🎉':'Дальше';
+    document.querySelector('#onb .detail-scroll').scrollTop=0;
+  }
+  function onbNext(){
+    if(onbStep===1){
+      const inp=document.getElementById('onb-name');
+      const v=inp.value.trim();
+      if(!v){ inp.style.borderColor='var(--danger)'; inp.focus(); toast('✏️','Как зовут малыша?','Введите имя — без него никак'); return; }
+      inp.style.borderColor='';
+      onbName=v;
+      document.getElementById('onb2-h').textContent='Когда '+onbName+(onbGirl?' родилась?':' родился?');
+      document.getElementById('onb3-h').textContent=onbName+(onbGirl?' торопилась к вам?':' торопился к вам?');
+      document.getElementById('onb6-h').textContent='Как '+onbName+' ест?';
+    }
+    if(onbStep<ONB_TOTAL){ onbStep++; onbShow(); } else finishOnb();
+  }
+  function onbBack(){ if(onbStep>1){ onbStep--; onbShow(); } }
+  function finishOnb(skip){
+    document.getElementById('onb').classList.remove('open');
+    if(!skip){ applyProfile(); toast('👶','Профиль: '+onbName,'Главный экран настроен под вас'); confetti(['💚','✨','👶','🌟']); }
+  }
+
+  // ── перенос данных онбординга на главный экран ──
+  const plural=(n,one,few,many)=>{ n=Math.abs(n)%100; const d=n%10; if(n>10&&n<20) return many; if(d>1&&d<5) return few; if(d===1) return one; return many; };
+  function ageText(iso){
+    if(!iso) return '';
+    const bd=new Date(iso), t=new Date();
+    if(bd>t) return 'скоро познакомимся 🤰';
+    let m=(t.getFullYear()-bd.getFullYear())*12+(t.getMonth()-bd.getMonth());
+    let d=t.getDate()-bd.getDate();
+    if(d<0){ m--; d+=new Date(t.getFullYear(), t.getMonth(), 0).getDate(); }
+    if(m<=0) return d+' '+plural(d,'день','дня','дней');
+    return m+' '+plural(m,'месяц','месяца','месяцев')+(d?' и '+d+' '+plural(d,'день','дня','дней'):'');
+  }
+  function greetLine(mom){
+    const h=new Date().getHours();
+    const w=h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
+    return w+(mom?', '+mom:'')+(h>=5&&h<18?' ☀️':' 🌙');
+  }
+  function applyProfile(){
+    const momName=document.getElementById('onb-mom').value.trim();
+    const city=document.getElementById('onb-city').value.trim();
+    const age=ageText(document.getElementById('onb-bd').value);
+    const ava=onbGirl?'👧':'👦';
+    document.getElementById('greet-line').textContent=greetLine(momName);
+    document.getElementById('kid-line').textContent=onbName+(age?' · '+age:'');
+    document.getElementById('kid-avatar').textContent=ava;
+    document.getElementById('dr-kid-ava').textContent=ava;
+    document.getElementById('dr-kid-name').textContent=onbName;
+    if(age) document.getElementById('dr-kid-age').textContent=age;
+    // тип вскармливания → быстрая запись + тайл «еда» в своих единицах
+    const feedEl=document.querySelector('#onb-6 .onb-opt.on');
+    const feed=feedEl?feedEl.dataset.feed:'';
+    const qf=document.getElementById('quick-feed');
+    const ago='<span class="ago">· 2 ч 5 м</span>';
+    if(feed==='bf'){ qf.innerHTML='<span class="qe">🤱</span>ГВ'+ago; GLANCE[1]=['🤱','5','ГВ',.63]; }
+    else if(feed==='ff'){ qf.innerHTML='<span class="qe">🍼</span>Смесь'+ago; GLANCE[1]=['🍼','540','мл смеси',.6]; }
+    else if(feed==='mixed'){ qf.innerHTML='<span class="qe">🤱</span>ГВ · смесь'+ago; GLANCE[1]=['🍼','5','кормл.',.63]; }
+    else GLANCE[1]=['🥣','75','г прикорма',.75];
+    renderGlance(dayMode==='morning');
+    // город → чип погоды в шапке и карточка
+    if(city){
+      document.getElementById('head-weather').textContent='🌤 '+city+' · +4°';
+      document.getElementById('car-weather-sub').textContent=city+' · прохладнее, чем вчера';
+      INFO.weather.d=city+' · сейчас +4°, к прогулке в 16:30 потеплеет до +6°, без осадков.';
+    }
+    // интересы → состав ленты
+    const ints=[...document.querySelectorAll('#onb-7 .onb-opt.on')].map(o=>o.dataset.int);
+    const cards=[...document.getElementById('carousel').children];
+    if(ints.length){
+      cards.forEach(c=>{ const ci=c.dataset.int; c.style.display=(ci==='always'||ints.includes(ci))?'':'none'; });
+    }
+    const n=cards.filter(c=>c.style.display!=='none').length;
+    document.getElementById('car-count').textContent=n+' '+plural(n,'карточка','карточки','карточек')+' · 1 минута';
+  }
+  // приветствие по реальному времени и при пропуске онбординга
+  document.getElementById('greet-line').textContent=greetLine('');
+
+  // ── живой экран: агенда, hero, режимы дня ──
+  function heroExpand(exp){ document.getElementById('hero-now').classList.toggle('mini', !exp); }
+  function agendaDone(id){
+    const r=document.getElementById(id);
+    if(!r||r.classList.contains('done')) return;
+    r.classList.add('done');
+    const right=r.querySelector('.tag')||r.querySelector('.chev');
+    if(right) right.outerHTML='<span class="tag green">✓</span>';
+    const rows=[...document.querySelectorAll('.agenda .ag-row')];
+    rows.forEach(x=>x.classList.remove('next'));
+    const nx=rows.find(x=>!x.classList.contains('done'));
+    if(nx) nx.classList.add('next');
+  }
+  // [эмодзи, значение, подпись, доля дневной нормы возраста]
+  const GLANCE=[['😴','2:40','сон',.76],['🥣','2','еда',.67],['💧','90','мл воды',.38],['🩲','4','подгуз.',.67]];
+  function renderGlance(empty){
+    [...document.querySelectorAll('#glance button')].forEach((b,i)=>{
+      const [e,v,l,f]=GLANCE[i];
+      const w=empty?0:Math.min(100,Math.round(f*100));
+      b.innerHTML=`<div class="ge">${e}</div><div class="gv">${empty?'—':v}</div><div class="gl">${l}</div>
+        <div class="gbar"><i class="${f<.5&&!empty?'low':''}" style="width:${w}%"></i></div>`;
+    });
+  }
+  let dayMode='day';
+  function setDayMode(m){
+    if(sleeping) toggleSleep(); // переключение режима завершает демо-сон
+    dayMode=m;
+    const label=document.getElementById('sleep-label'), time=document.getElementById('sleep-time'),
+          hint=document.getElementById('sleep-hint'), btn=document.getElementById('sleep-btn'),
+          ai=document.getElementById('sleep-ai'), note=document.getElementById('glance-note');
+    btn.style.background='';
+    if(m==='morning'){
+      heroExpand(true);
+      label.textContent='Доброе утро'; label.style.color='var(--sand)';
+      time.textContent='—';
+      hint.innerHTML='Как прошла ночь? Запишите подъём —<br>и день начнёт считаться сам';
+      btn.textContent='☀️ Малыш проснулся'; btn.onclick=()=>{ toast('☀️','Подъём записан','7:05 · хорошего дня!'); setDayMode('day'); };
+      ai.style.display='none';
+      renderGlance(true); note.textContent='записей пока нет';
+      document.getElementById('evening-btn').style.display='none';
+    } else if(m==='evening'){
+      heroExpand(true);
+      label.textContent='Готовимся ко сну'; label.style.color='var(--terra)';
+      time.textContent='0:40';
+      hint.innerHTML='Ночное укладывание в <b>19:30</b> · ритуал:<br>ванна → книжка → колыбельная';
+      btn.textContent='🌙 Начать ночной сон'; btn.onclick=()=>toggleSleep();
+      ai.style.display=''; ai.textContent='🌙 Итог дня готов — посмотреть ›'; ai.onclick=openEvening;
+      renderGlance(false); note.textContent='журнал ›';
+      document.getElementById('evening-btn').style.display='';
+    } else {
+      heroExpand(false);
+      winMin=50;
+      label.textContent='Бодрствует'; label.style.color='var(--dusk)';
+      time.textContent='1:50';
+      hint.innerHTML='Окно сна в <b>12:40</b> · через ~50 мин';
+      btn.textContent='Начать сон'; btn.onclick=()=>toggleSleep();
+      ai.style.display=''; ai.textContent='✦ Анализ сна · ночь была беспокойной ›'; ai.onclick=()=>openAI('sleep');
+      renderGlance(false); note.textContent='журнал ›';
+      document.getElementById('evening-btn').style.display='none';
+    }
+    const names={morning:'утро',day:'день',evening:'вечер'};
+    const nxt={day:'вечер',evening:'утро',morning:'день'};
+    document.getElementById('daycycle').textContent='🌗 Демо: сейчас «'+names[m]+'» — показать '+nxt[m]+' ›';
+  }
+  function cycleDay(){ setDayMode(dayMode==='day'?'evening':dayMode==='evening'?'morning':'day'); }
+  let winMin=50; // отсчёт до окна сна (референс: Huckleberry SweetSpot)
+  { const h=new Date().getHours(); setDayMode(h<9?'morning':h>=19?'evening':'day'); }
+
+  setInterval(()=>{
+    if(dayMode!=='day'||sleeping) return;
+    winMin--;
+    const hint=document.getElementById('sleep-hint');
+    if(winMin>20) hint.innerHTML=`Окно сна в <b>12:40</b> · через ~${winMin} мин`;
+    else if(winMin>0){ heroExpand(true); document.getElementById('sleep-label').textContent='Скоро окно сна'; hint.innerHTML=`Пора готовиться — укладывать через <b>~${winMin} мин</b>`; }
+    else { document.getElementById('sleep-label').textContent='Пора укладывать'; hint.innerHTML='Окно сна открыто 🌙 лучший момент — сейчас'; }
+  },60000);
+  function pickStatus(name,emoji,love){
+    closeSheet();
+    toast(emoji, FOODS[current].n+': '+name, love?'Добавлено в любимое — Миша одобряет':'Статус сохранён');
+    if(love) confetti(['❤️','🧡','💛','✨']);
+  }
+
+  // ── лог + достижение ──
+  let logged=false;
+  function logFood(){
+    closeFood();
+    if(!logged){
+      logged=true;
+      toast('🏆','Новое достижение!','«Смелый дегустатор» — 11 продуктов попробовано');
+      confetti(['🎉','✨','🥄','🌟','💚','🎊']);
+    } else {
+      toast('✓','Записано','Добавлено в дневник прикорма');
+    }
+  }
+
+  // ── toast ──
+  let toastTimer;
+  function toast(e,t,d){
+    const el=document.getElementById('toast');
+    document.getElementById('toast-e').textContent=e;
+    document.getElementById('toast-t').textContent=t;
+    document.getElementById('toast-d').textContent=d||'';
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+  }
+
+  // ── конфетти ──
+  function confetti(set){
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const zone=document.getElementById('confetti');
+    for(let i=0;i<16;i++){
+      const s=document.createElement('span'); s.className='cf';
+      s.textContent=set[i%set.length];
+      s.style.left=(6+Math.random()*88)+'%';
+      s.style.animationDelay=(Math.random()*0.35)+'s';
+      s.style.fontSize=(15+Math.random()*14)+'px';
+      zone.appendChild(s);
+      setTimeout(()=>s.remove(),2200);
+    }
+  }
+
+  renderCats(); renderFoodGrid(); renderPantry(); renderSkills();
+  new MutationObserver(()=>{renderFoodGrid(); if(document.getElementById('detail').classList.contains('open')) renderProduct();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+</script>
