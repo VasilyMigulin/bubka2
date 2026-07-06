@@ -225,6 +225,15 @@
   .glance .gbar{height:3px; border-radius:99px; background:var(--elev); margin:6px 10px 0; overflow:hidden;}
   .glance .gbar i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .6s ease;}
   .glance .gbar i.low{background:var(--warn);}
+  /* строка «спросить ИИ» — витрина главной фичи на главном экране */
+  .ask{display:flex; align-items:center; gap:10px; width:100%; border:1.5px dashed var(--accent); background:var(--accent-soft);
+    border-radius:16px; padding:13px 15px; margin-bottom:16px; cursor:pointer; font-family:inherit; text-align:left;
+    transition:transform .15s;}
+  .ask:active{transform:scale(.98);}
+  .ask .ai-dot{flex:none; width:26px; height:26px; border-radius:50%; background:linear-gradient(150deg,var(--accent),var(--accent-deep));
+    color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center;}
+  .ask .ph{font-size:13.5px; color:var(--accent); font-weight:600;}
+  .ask .mic{margin-left:auto; color:var(--accent); opacity:.7; font-size:15px;}
 
   /* сводка дня */
   .glance{display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-bottom:16px;}
@@ -638,6 +647,26 @@
           <button class="btn" id="sleep-ai" style="margin-top:8px; padding:11px; background:color-mix(in srgb, var(--card) 65%, transparent); color:var(--dusk); font-size:13.5px" onclick="openAI('sleep')">✦ Анализ сна · ночь была беспокойной ›</button>
         </div>
 
+        <!-- Спросить ИИ — главная фича видна на главной -->
+        <button class="ask rise" onclick="goAI()">
+          <span class="ai-dot">✦</span>
+          <span class="ph" id="ask-text">Спросить про малыша — сон, прикорм, капризы…</span>
+          <span class="mic">🎙</span>
+        </button>
+
+        <!-- Вечерний чек-ин мамы (показывается в режиме «вечер») -->
+        <div class="card rise" id="mom-checkin" style="display:none">
+          <div style="font-size:14.5px; font-weight:650">Как вы сегодня, <span id="checkin-name">мама</span>?</div>
+          <div class="sub" style="margin-top:2px">День был длинным. Один тап — это для вас, не для статистики.</div>
+          <div class="mood-row" style="margin-bottom:2px">
+            <button onclick="checkMood(this,4)">😄</button>
+            <button onclick="checkMood(this,3)">🙂</button>
+            <button onclick="checkMood(this,2)">😐</button>
+            <button onclick="checkMood(this,1)">😞</button>
+            <button onclick="checkMood(this,0)">🥲</button>
+          </div>
+        </div>
+
         <!-- День в цифрах → журнал -->
         <div class="sec-head rise"><b>День в цифрах</b><span id="glance-note" onclick="openJournal()" style="cursor:pointer; color:var(--accent); font-weight:700">журнал ›</span></div>
         <div class="glance rise" id="glance">
@@ -722,6 +751,18 @@
             <div class="cs">Малыш уснёт — 4 минуты только ваши</div>
           </button>
         </div>
+        <!-- Момент дня — эмоциональный якорь и вход в дневник -->
+        <div class="card rise" style="padding:12px 15px; cursor:pointer" onclick="drSeg('scr-dev','pg-dv-diary')">
+          <div class="row">
+            <div style="flex:none; width:46px; height:46px; border-radius:14px; background:var(--terra-soft); display:flex; align-items:center; justify-content:center; font-size:24px">🎃</div>
+            <div class="grow">
+              <div style="font-size:14px; font-weight:650">Вчерашний момент</div>
+              <div class="sub" style="margin-top:1px">Первая проба тыквы — фото уже в дневнике</div>
+            </div>
+            <span style="color:var(--text2)">›</span>
+          </div>
+        </div>
+
         <button class="btn btn-soft rise" id="evening-btn" onclick="openEvening()" style="display:none">🌙 Итог дня готов — посмотреть</button>
         <div class="sub rise" style="text-align:center; padding:10px 0 6px">Это всё на сегодня — лента конечная 🤍</div>
         <button class="rise" onclick="cycleDay()" id="daycycle" style="display:block; margin:0 auto; border:none; background:none; font-family:inherit; font-size:12px; font-weight:650; color:var(--text2); cursor:pointer; padding:6px 12px">🌗 Демо: сейчас «день» — показать вечер ›</button>
@@ -2060,6 +2101,8 @@
     const ava=onbGirl?'👧':'👦';
     document.getElementById('greet-line').textContent=greetLine(momName);
     document.getElementById('kid-line').textContent=onbName+(age?' · '+age:'');
+    document.getElementById('ask-text').textContent='Спросить про '+onbName+' — сон, прикорм, капризы…';
+    if(momName) document.getElementById('checkin-name').textContent=momName;
     document.getElementById('kid-avatar').textContent=ava;
     document.getElementById('dr-kid-ava').textContent=ava;
     document.getElementById('dr-kid-name').textContent=onbName;
@@ -2123,6 +2166,7 @@
           hint=document.getElementById('sleep-hint'), btn=document.getElementById('sleep-btn'),
           ai=document.getElementById('sleep-ai'), note=document.getElementById('glance-note');
     btn.style.background='';
+    document.getElementById('mom-checkin').style.display = m==='evening' ? '' : 'none';
     if(m==='morning'){
       heroExpand(true);
       label.textContent='Доброе утро'; label.style.color='var(--sand)';
@@ -2157,6 +2201,11 @@
     document.getElementById('daycycle').textContent='🌗 Демо: сейчас «'+names[m]+'» — показать '+nxt[m]+' ›';
   }
   function cycleDay(){ setDayMode(dayMode==='day'?'evening':dayMode==='evening'?'morning':'day'); }
+  function checkMood(el,score){
+    pickSeg(el);
+    if(score<=1){ toast('💛','Обнимаем','В «Заботе о маме» — поддержка и телефон помощи'); setTimeout(openMom,1400); }
+    else{ toast('💛','Записали','Спасибо, что уделили себе секунду'); }
+  }
   let winMin=50; // отсчёт до окна сна (референс: Huckleberry SweetSpot)
   { const h=new Date().getHours(); setDayMode(h<9?'morning':h>=19?'evening':'day'); }
 
