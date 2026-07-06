@@ -212,6 +212,11 @@
   .hero-now.mini .sleep-mini-btn{display:inline-flex;}
   .ag-row.done{opacity:.55;}
   .ag-row.done .an{text-decoration:line-through;}
+  .ag-check{flex:none; width:26px; height:26px; border-radius:50%; border:1.5px solid var(--hairline); background:var(--card);
+    color:transparent; font-size:12px; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center;
+    transition:all .2s;}
+  .ag-check:active{transform:scale(.88); border-color:var(--accent); color:var(--accent);}
+  .ag-row.next .ag-check{border-color:var(--accent);}
   /* ночная сцена во время сна (референс: Napper) */
   .hero-now.sleeping{background:linear-gradient(155deg,#2E3142 0%,#232634 100%);}
   .hero-now.sleeping .state{color:#9BA2C6;}
@@ -685,25 +690,9 @@
           <button onclick="openRecords()"><span class="qe">➕</span>Все записи</button>
         </div>
 
-        <!-- Дальше по плану -->
-        <div class="sec-head rise"><b>Дальше</b><span>план на сегодня</span></div>
-        <div class="agenda rise">
-          <div class="ag-row next" id="ag-feed" onclick="openFood('pumpkin')">
-            <div class="at">12:10</div><div class="ae">🎃</div>
-            <div class="grow"><div class="an">Обед: тыква, день 2</div><div class="as">как подать безопасно ›</div></div>
-            <span class="tag green">скоро</span>
-          </div>
-          <div class="ag-row" id="ag-sleep" onclick="toast('😴','Сон 2','Ориентир 13:40 · подскажем по признакам усталости')">
-            <div class="at">13:40</div><div class="ae">😴</div>
-            <div class="grow"><div class="an">Второй сон · ~1,5 ч</div></div>
-            <span class="chev">›</span>
-          </div>
-          <div class="ag-row" id="ag-walk" onclick="openInfo('game')">
-            <div class="at">16:30</div><div class="ae">🧸</div>
-            <div class="grow"><div class="an">Прогулка + «Где мишка?»</div><div class="as">игра дня · 5 минут</div></div>
-            <span class="chev">›</span>
-          </div>
-        </div>
+        <!-- План дня: рендерится по режиму (утро/день/вечер), пункты отмечаются кружком -->
+        <div class="sec-head rise"><b>План дня</b><span id="ag-note" onclick="openInfo('fullday')" style="cursor:pointer; color:var(--accent); font-weight:700">весь день ›</span></div>
+        <div class="agenda rise" id="agenda"></div>
 
         <!-- Лента: карусель. data-int — тема карточки; после онбординга остаются только выбранные темы -->
         <div class="sec-head rise"><b>Сегодня с малышом</b><span id="car-count">6 карточек · 1 минута</span></div>
@@ -1874,6 +1863,22 @@
         <div class="rule"><span class="re">🌬</span><div><b>Дыхание 4-7-8</b><p>Вдох на 4 счёта, пауза 7, выдох 8. Три круга — и нервная система скажет спасибо.</p></div></div>
         <div class="note"><span class="ne">🤍</span><span>Отдохнувшая мама — лучшее, что может случиться с малышом сегодня.</span></div>
         <button class="btn btn-soft" onclick="closeInfo();openMom()" style="margin-bottom:20px">💛 Забота о маме ›</button>`},
+    fullday:{e:'🗓',t:'План на сегодня',d:'Построен по возрасту и вчерашнему сну (подъём 7:05). Это ориентир — признаки усталости важнее часов.',
+      body:`<div class="card">
+        <div class="meal-line"><div class="t">7:05</div><div class="grow"><b style="font-size:14px">Подъём + ГВ</b></div></div>
+        <div class="meal-line"><div class="t">8:30</div><div class="grow"><b style="font-size:14px">Завтрак: овсянка + банан</b></div></div>
+        <div class="meal-line"><div class="t">9:50</div><div class="grow"><b style="font-size:14px">Сон 1 · ~1,5 ч</b><div class="sub">чуть раньше — компенсируем ночь</div></div></div>
+        <div class="meal-line"><div class="t">11:30</div><div class="grow"><b style="font-size:14px">ГВ / смесь</b></div></div>
+        <div class="meal-line"><div class="t">12:10</div><div class="grow"><b style="font-size:14px">Обед: тыква, день 2</b></div></div>
+        <div class="meal-line"><div class="t">13:40</div><div class="grow"><b style="font-size:14px">Сон 2 · ~1,5 ч</b></div></div>
+        <div class="meal-line"><div class="t">16:00</div><div class="grow"><b style="font-size:14px">Полдник: ГВ / смесь</b></div></div>
+        <div class="meal-line"><div class="t">16:30</div><div class="grow"><b style="font-size:14px">Прогулка + игра дня</b><div class="sub">«Где мишка?» · 5 минут</div></div></div>
+        <div class="meal-line"><div class="t">18:00</div><div class="grow"><b style="font-size:14px">Ужин: кабачок</b></div></div>
+        <div class="meal-line"><div class="t">19:00</div><div class="grow"><b style="font-size:14px">Ванна → книжка → колыбельная</b></div></div>
+        <div class="meal-line"><div class="t">19:30</div><div class="grow"><b style="font-size:14px">Ночной сон 🌙</b></div></div>
+      </div>
+      <div class="note"><span class="ne">🔄</span><span>План живой: сон уехал на час — всё после сдвинется само, а в блоке «План дня» всегда видны ближайшие шаги.</span></div>
+      <button class="btn btn-soft" onclick="closeInfo();openAI('day')" style="margin-bottom:20px">✦ Перестроить под сегодня</button>`},
   };
   function openInfo(type){
     const c=INFO[type];
@@ -2141,12 +2146,53 @@
     const r=document.getElementById(id);
     if(!r||r.classList.contains('done')) return;
     r.classList.add('done');
-    const right=r.querySelector('.tag')||r.querySelector('.chev');
+    const right=r.querySelector('.ag-check')||r.querySelector('.tag')||r.querySelector('.chev');
     if(right) right.outerHTML='<span class="tag green">✓</span>';
     const rows=[...document.querySelectorAll('.agenda .ag-row')];
     rows.forEach(x=>x.classList.remove('next'));
     const nx=rows.find(x=>!x.classList.contains('done'));
     if(nx) nx.classList.add('next');
+    updateAgNote();
+  }
+  // план дня: своё наполнение для утра, дня и вечера
+  const AGENDAS={
+    morning:[
+      {id:'ag-wake', t:'7:05', e:'☀️', n:'Подъём + ГВ', s:'записать в одно касание', open:()=>{toast('☀️','Подъём записан','7:05 · хорошего дня!'); setDayMode('day');}},
+      {id:'ag-brk',  t:'8:30', e:'🥣', n:'Завтрак: овсянка + банан', s:'рецепт ›', open:()=>gotoSeg('scr-food','pg-fd-recipes')},
+      {id:'ag-nap1', t:'9:50', e:'😴', n:'Первый сон · ~1,5 ч', s:'окно откроется около 9:30', open:()=>openAI('sleep')},
+    ],
+    day:[
+      {id:'ag-feed',  t:'12:10', e:'🎃', n:'Обед: тыква, день 2', s:'как подать безопасно ›', open:()=>openFood('pumpkin')},
+      {id:'ag-sleep', t:'13:40', e:'😴', n:'Второй сон · ~1,5 ч', s:'подскажем по признакам усталости', open:()=>openAI('sleep')},
+      {id:'ag-snack', t:'16:00', e:'🤱', n:'Полдник: ГВ / смесь', s:'', open:null},
+      {id:'ag-walk',  t:'16:30', e:'🧸', n:'Прогулка + игра «Где мишка?»', s:'игра дня · 5 минут ›', open:()=>openInfo('game')},
+      {id:'ag-bath',  t:'19:00', e:'🛁', n:'Ванна и ритуал', s:'начало укладывания', open:null},
+    ],
+    evening:[
+      {id:'ag-din',   t:'18:00', e:'🥣', n:'Ужин: кабачок', s:'', open:null, done:true},
+      {id:'ag-bath2', t:'19:00', e:'🛁', n:'Ванна', s:'тёплая · 5–7 минут', open:null},
+      {id:'ag-rit',   t:'19:20', e:'📖', n:'Книжка + колыбельная', s:'одинаковый ритуал = быстрее засыпание', open:null},
+      {id:'ag-night', t:'19:30', e:'🌙', n:'Ночной сон', s:'запустить таймер ›', open:()=>toggleSleep(true)},
+    ],
+  };
+  function renderAgenda(){
+    const list=AGENDAS[dayMode]||AGENDAS.day;
+    const el=document.getElementById('agenda');
+    el.innerHTML=list.map(it=>`
+      <div class="ag-row${it.done?' done':''}" id="${it.id}">
+        <div class="at">${it.t}</div><div class="ae">${it.e}</div>
+        <div class="grow"><div class="an">${it.n}</div>${it.s?`<div class="as">${it.s}</div>`:''}</div>
+        ${it.done?'<span class="tag green">✓</span>':`<button class="ag-check" onclick="event.stopPropagation();agendaDone('${it.id}');toast('✓','${it.n.replace(/'/g,'’')}','Записано в журнал')" aria-label="Отметить сделанным">✓</button>`}
+      </div>`).join('');
+    list.forEach(it=>{ if(it.open) document.getElementById(it.id).addEventListener('click',it.open); });
+    const nx=[...el.children].find(r=>!r.classList.contains('done'));
+    if(nx) nx.classList.add('next');
+    updateAgNote();
+  }
+  function updateAgNote(){
+    const rows=[...document.querySelectorAll('#agenda .ag-row')];
+    const done=rows.filter(r=>r.classList.contains('done')).length;
+    document.getElementById('ag-note').textContent=(done?done+' из '+rows.length+' · ':'')+'весь день ›';
   }
   // [эмодзи, значение, подпись, доля дневной нормы возраста]
   const GLANCE=[['😴','2:40','сон',.76],['🥣','2','еда',.67],['💧','90','мл воды',.38],['🩲','4','подгуз.',.67]];
@@ -2196,6 +2242,7 @@
       renderGlance(false); note.textContent='журнал ›';
       document.getElementById('evening-btn').style.display='none';
     }
+    renderAgenda();
     const names={morning:'утро',day:'день',evening:'вечер'};
     const nxt={day:'вечер',evening:'утро',morning:'день'};
     document.getElementById('daycycle').textContent='🌗 Демо: сейчас «'+names[m]+'» — показать '+nxt[m]+' ›';
