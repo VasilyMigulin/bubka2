@@ -1,0 +1,873 @@
+<title>bubka — концепция приложения</title>
+<style>
+  html, body {
+    height: auto !important;
+    min-height: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+  }
+  /* Собственный скролл-контейнер: прокрутка работает независимо от стилей хоста */
+  .scroller { background: var(--bg); }
+
+  :root {
+    --bg: #FBFAF7;
+    --surface: #FFFFFF;
+    --surface-2: #F4EFE7;
+    --ink: #2E2C28;
+    --ink-soft: #8C8579;
+    --line: #ECE7DC;
+    --accent: #64796C;
+    --accent-strong: #4E6156;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #ECF1ED;
+    --sand: #A78F68;
+    --sand-soft: #F3EDE1;
+    --sos: #B95E52;
+    --sos-soft: #F7EAE7;
+    --shadow: 0 1px 2px rgba(46,44,40,.04), 0 16px 40px rgba(46,44,40,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161513;
+      --surface: #201F1C;
+      --surface-2: #292723;
+      --ink: #ECE9E2;
+      --ink-soft: #9C968A;
+      --line: #33312C;
+      --accent: #97AF9F;
+      --accent-strong: #AEC4B5;
+      --accent-ink: #14201B;
+      --accent-soft: #262E29;
+      --sand: #C2AA82;
+      --sand-soft: #2E2A23;
+      --sos: #D08578;
+      --sos-soft: #382823;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 16px 40px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #FBFAF7; --surface: #FFFFFF; --surface-2: #F4EFE7;
+    --ink: #2E2C28; --ink-soft: #8C8579; --line: #ECE7DC;
+    --accent: #64796C; --accent-strong: #4E6156; --accent-ink: #FFFFFF; --accent-soft: #ECF1ED;
+    --sand: #A78F68; --sand-soft: #F3EDE1;
+    --sos: #B95E52; --sos-soft: #F7EAE7;
+    --shadow: 0 1px 2px rgba(46,44,40,.04), 0 16px 40px rgba(46,44,40,.05);
+  }
+  :root[data-theme="dark"] {
+    --bg: #161513; --surface: #201F1C; --surface-2: #292723;
+    --ink: #ECE9E2; --ink-soft: #9C968A; --line: #33312C;
+    --accent: #97AF9F; --accent-strong: #AEC4B5; --accent-ink: #14201B; --accent-soft: #262E29;
+    --sand: #C2AA82; --sand-soft: #2E2A23;
+    --sos: #D08578; --sos-soft: #382823;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 16px 40px rgba(0,0,0,.28);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    line-height: 1.62;
+    margin: 0;
+    font-size: 16.5px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 28px 120px; }
+
+  h1, h2, h3 { font-weight: 650; letter-spacing: -0.02em; text-wrap: balance; line-height: 1.15; }
+  h1 { font-size: clamp(2.3rem, 5.5vw, 3.6rem); letter-spacing: -0.03em; margin: .35em 0 .35em; font-weight: 700; }
+  h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 0 0 .7em; }
+  h3 { font-size: 1.12rem; margin: 0 0 .35em; }
+  p { margin: 0 0 1em; max-width: 68ch; }
+  .muted { color: var(--ink-soft); }
+
+  .eyebrow {
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 600; margin: 0 0 1.1em;
+  }
+  section { margin-top: 110px; }
+
+  header.hero { padding-top: 96px; text-align: center; }
+  header.hero .eyebrow { margin-bottom: 1.6em; }
+  .hero h1 { margin-left: auto; margin-right: auto; max-width: 18ch; }
+  .hero .lede { font-size: 1.15rem; color: var(--ink-soft); max-width: 56ch; margin: 0 auto; }
+  .hero-meta {
+    font-size: .8rem; color: var(--ink-soft); margin-top: 40px;
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  }
+  .hero-meta span { background: var(--surface-2); border-radius: 99px; padding: 6px 16px; }
+
+  .callout {
+    background: var(--accent-soft); border-radius: 18px;
+    padding: 24px 28px; margin: 32px 0;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout strong { color: var(--accent-strong); }
+
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  .table-scroll { overflow-x: auto; margin: 28px 0 8px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
+  th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--line); vertical-align: top; min-width: 140px; }
+  th { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  td b { font-weight: 650; letter-spacing: -0.01em; }
+  .tag { display: inline-block; font-size: .72rem; padding: 3px 11px; border-radius: 99px; font-weight: 600; white-space: nowrap; }
+  .tag.plus { background: var(--accent-soft); color: var(--accent-strong); }
+  .tag.minus { background: var(--sos-soft); color: var(--sos); }
+
+  /* phone mockup */
+  .phone-row { display: flex; gap: 48px; align-items: flex-start; flex-wrap: wrap; margin-top: 36px; }
+  .phone {
+    flex: 0 0 304px; max-width: 304px; border: 1px solid var(--line); border-radius: 46px;
+    background: var(--surface); box-shadow: var(--shadow); padding: 20px 16px 14px; margin: 0 auto;
+  }
+  .phone .screen { display: flex; flex-direction: column; gap: 10px; min-height: 460px; }
+  .p-head { display: flex; align-items: center; gap: 12px; padding: 4px 8px 2px; }
+  .p-head .ava { width: 44px; height: 44px; border-radius: 50%; background: var(--sand-soft); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex: none; }
+  .p-head .name { font-weight: 650; font-size: 1.02rem; letter-spacing: -0.01em; }
+  .p-head .age { font-size: .72rem; color: var(--ink-soft); }
+  .p-head .menu { margin-left: auto; color: var(--ink-soft); font-size: 1.05rem; }
+  .p-card { background: var(--surface-2); border-radius: 16px; padding: 12px 15px; }
+  .p-card .lbl { font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+  .p-card .val { font-size: .92rem; margin-top: 2px; font-weight: 500; }
+  .p-card.predict { background: var(--accent-soft); }
+  .p-card.predict .val { color: var(--accent-strong); }
+  .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .p-btn {
+    background: var(--surface-2); border-radius: 16px; padding: 12px 9px; text-align: center;
+    font-size: .74rem; color: var(--ink); font-weight: 500;
+  }
+  .p-btn small { color: var(--ink-soft); font-weight: 400; }
+  .p-btn span { display: block; font-size: 1.45rem; margin-bottom: 2px; }
+  .p-btn.sage { background: var(--accent-soft); }
+  .p-btn.sand { background: var(--sand-soft); }
+
+  /* feed rows with thumbnails */
+  .p-feed { display: flex; gap: 11px; align-items: center; background: var(--surface-2); border-radius: 16px; padding: 10px 12px; }
+  .p-feed .th {
+    width: 42px; height: 42px; border-radius: 13px; flex: none;
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    background: linear-gradient(140deg, var(--accent-soft), var(--sand-soft));
+  }
+  .p-feed .tx { font-size: .78rem; font-weight: 500; line-height: 1.35; }
+  .p-feed .tx small { display: block; color: var(--ink-soft); font-weight: 400; font-size: .64rem; letter-spacing: .08em; text-transform: uppercase; }
+
+  /* product screen */
+  .p-hero {
+    border-radius: 20px; padding: 18px 14px 14px; text-align: center;
+    background: linear-gradient(150deg, var(--sand-soft), var(--accent-soft));
+  }
+  .p-hero .big { font-size: 3.1rem; line-height: 1; }
+  .p-hero .ttl { font-weight: 650; font-size: 1.05rem; margin-top: 6px; letter-spacing: -0.01em; }
+  .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .chip { font-size: .6rem; padding: 3px 10px; border-radius: 99px; background: var(--surface); color: var(--ink-soft); font-weight: 600; }
+  .seg { display: flex; gap: 6px; }
+  .seg div { flex: 1; text-align: center; font-size: .64rem; padding: 6px 2px; border-radius: 99px; background: var(--surface-2); font-weight: 600; color: var(--ink-soft); }
+  .seg .on { background: var(--accent); color: var(--accent-ink); }
+  .serve { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .serve div { background: var(--surface-2); border-radius: 14px; padding: 11px 6px; text-align: center; font-size: .6rem; color: var(--ink-soft); line-height: 1.35; }
+  .serve div b { display: block; font-size: 1.35rem; margin-bottom: 4px; }
+  .p-row { display: flex; gap: 8px; overflow: hidden; }
+  .p-row .p-card { flex: 1; }
+
+  /* AI screen */
+  .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ai-btn {
+    background: var(--accent-soft); border-radius: 15px; padding: 12px 11px;
+    font-size: .72rem; font-weight: 600; color: var(--accent-strong); line-height: 1.3;
+  }
+  .ai-btn span { display: block; font-size: 1.15rem; margin-bottom: 3px; }
+  .ai-answer { background: var(--surface-2); border-radius: 16px; padding: 12px 14px; font-size: .76rem; line-height: 1.5; }
+  .ai-answer .lbl { font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; margin-bottom: 4px; }
+  .p-nav {
+    margin-top: auto; display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--line); padding-top: 12px; font-size: .6rem; text-align: center; color: var(--ink-soft);
+  }
+  .p-nav div span { display: block; font-size: 1.05rem; }
+  .p-nav .ai {
+    background: var(--accent); color: var(--accent-ink); border-radius: 50%;
+    width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; margin-top: -20px; box-shadow: var(--shadow); flex: none;
+  }
+  .p-nav .active { color: var(--accent-strong); font-weight: 650; }
+  .phone-note { flex: 1 1 340px; }
+  .phone-note ol { padding-left: 20px; margin: 0; }
+  .phone-note li { margin-bottom: 14px; }
+  .phone-note li::marker { color: var(--accent); font-weight: 650; }
+
+  /* module cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-top: 36px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 22px;
+    padding: 26px 28px; box-shadow: var(--shadow);
+  }
+  .card h3 { display: flex; align-items: center; gap: 12px; letter-spacing: -0.015em; }
+  .card h3 .n {
+    background: var(--accent-soft); color: var(--accent-strong);
+    font-size: .8rem; font-weight: 650; border-radius: 50%;
+    width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; flex: none;
+  }
+  .card ul { padding-left: 18px; margin: 10px 0 0; font-size: .92rem; color: var(--ink-soft); }
+  .card li { margin-bottom: 7px; }
+  .card li::marker { color: var(--sand); }
+  .card li b { color: var(--ink); font-weight: 600; }
+
+  /* feature list */
+  .feat { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-top: 36px; }
+  .feat-item {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    padding: 20px 22px; display: flex; gap: 16px; align-items: flex-start; box-shadow: var(--shadow);
+  }
+  .feat-item .ico { font-size: 1.25rem; flex: none; background: var(--sand-soft); border-radius: 13px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+  .feat-item h3 { font-size: 1rem; margin-bottom: .25em; }
+  .feat-item p { font-size: .89rem; color: var(--ink-soft); margin: 0; }
+  .feat-item .star { display: inline-block; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--sand); font-weight: 700; margin-bottom: 5px; margin-right: 6px; }
+  .feat-item .home { display: inline-block; font-size: .69rem; padding: 2px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; margin-bottom: 6px; }
+
+  /* principles */
+  .princ { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 36px; }
+  .princ div { background: var(--surface-2); border-radius: 18px; padding: 22px 24px; }
+  .princ h3 { font-size: 1.02rem; }
+  .princ p { font-size: .89rem; color: var(--ink-soft); margin: 0; }
+
+  /* roadmap */
+  .road { margin-top: 36px; display: flex; flex-direction: column; }
+  .road-step { display: flex; gap: 22px; }
+  .road-step .marker { display: flex; flex-direction: column; align-items: center; flex: none; }
+  .road-step .dot {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center; font-weight: 650; font-size: .85rem; flex: none;
+  }
+  .road-step .stem { width: 1.5px; flex: 1; background: var(--line); min-height: 24px; }
+  .road-step:last-child .stem { display: none; }
+  .road-step .body { padding-bottom: 34px; }
+  .road-step .body h3 span { color: var(--ink-soft); font-size: .78rem; font-weight: 500; margin-left: 10px; letter-spacing: 0; }
+  .road-step .body p { font-size: .93rem; color: var(--ink-soft); margin: 4px 0 0; }
+
+  .free-paid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; margin-top: 36px; }
+  .free-paid .card h3 { font-size: 1.15rem; }
+  .price { font-size: .95rem; color: var(--sand); font-weight: 600; margin-top: 12px; }
+
+  .subhead { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; margin: 44px 0 0; }
+
+  footer { margin-top: 120px; border-top: 1px solid var(--line); padding-top: 28px; font-size: .82rem; color: var(--ink-soft); }
+  footer a { color: var(--accent-strong); }
+  a { color: var(--accent-strong); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .card, .feat-item { transition: transform .18s ease; }
+    .card:hover, .feat-item:hover { transform: translateY(-2px); }
+  }
+</style>
+
+<div class="scroller">
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">bubka · Концепция продукта · июль 2026</p>
+  <h1>Один помощник вместо семи приложений</h1>
+  <p class="lede">bubka — суперапп для мамы от рождения малыша до 3 лет: трекеры, прикорм с фото-гидом, здоровье, развитие, персональная лента «Сегодня с малышом» и ИИ‑ассистент. Четыре раздела, понятных в 3 часа ночи с одной свободной рукой.</p>
+  <div class="hero-meta">
+    <span>Рынок: $1,9 млрд в 2026 → $4,9 млрд к 2035</span>
+    <span>Рост ~11–13% в год</span>
+  </div>
+</header>
+
+<section>
+  <p class="eyebrow">Часть 1 · Анализ рынка</p>
+  <h2>Каждый лидер силён в одном — и слаб во всём остальном</h2>
+  <p>Рынок родительских приложений растёт на 11–13% в год, но устроен фрагментарно: мама реально ставит 4–7 приложений одновременно. У каждого лидера есть одна сильная сторона, ради которой его терпят.</p>
+
+  <div class="table-scroll">
+    <table>
+      <tr><th>Приложение</th><th>За что любят</th><th>За что бросают</th></tr>
+      <tr>
+        <td><b>Huckleberry</b></td>
+        <td><span class="tag plus">Предсказание сна</span> SweetSpot® угадывает окно следующего сна с точностью ~80% — главная платная фича рынка</td>
+        <td>Дорогая подписка, только про сон, нужен интернет</td>
+      </tr>
+      <tr>
+        <td><b>Solid Starts</b></td>
+        <td><span class="tag plus">База прикорма</span> 400+ продуктов: фото и видео, как безопасно резать и подавать по возрасту, аллергены, риски подавиться</td>
+        <td>Только еда — трекеров сна и здоровья нет</td>
+      </tr>
+      <tr>
+        <td><b>Wonder Weeks</b></td>
+        <td><span class="tag plus">Скачки развития</span> Родители обожают понимать, «почему он вдруг капризный»</td>
+        <td>Наука спорная: точные даты скачков не подтверждаются исследованиями — подавать мягко, без обещаний «по дням»</td>
+      </tr>
+      <tr>
+        <td><b>Glow Baby</b></td>
+        <td><span class="tag plus">Комьюнити</span> Живой форум мам, поддержка в 4 утра</td>
+        <td><span class="tag minus">Перегруз</span> Лента, реклама и апселлы мешают просто записать кормление</td>
+      </tr>
+      <tr>
+        <td><b>Nara / Baby Tracker</b></td>
+        <td><span class="tag plus">Простой лог</span> Бесплатно, без рекламы, быстрые кнопки</td>
+        <td>Только журнал: ни советов, ни прогнозов, ни контента</td>
+      </tr>
+      <tr>
+        <td><b>AMMA, Мамлайф, maam (RU)</b></td>
+        <td><span class="tag plus">Контент по возрасту</span> Статьи, календари, доказательная медицина (maam)</td>
+        <td>Трекеры слабее западных, местами реклама и соцлента</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="callout">
+    <p><strong>Главный инсайт рынка:</strong> мамы бросают трекеры не потому, что не хотят трекать, а потому что приложение становится «ещё одним ребёнком». Исследование UW Medicine: родители с трекерами теряли ~45 минут сна за ночь — открыл приложение записать кормление, залип в ленте. Побеждает не то приложение, где больше функций, а то, которое <strong>снимает ментальную нагрузку</strong>: правильная информация, в нужный момент, за одно касание.</p>
+  </div>
+
+  <p>Отсюда позиционирование bubka: <b>«всё-в-одном» со спокойствием минималиста</b>. Полнота Glow + база еды уровня Solid Starts + предсказания уровня Huckleberry — но интерфейс, как у простого логгера. Эту нишу пока не занял никто, включая российский рынок.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 2 · Структура</p>
+  <h2>Четыре раздела и одна кнопка ИИ</h2>
+  <p>Вся логика навигации строится на одном вопросе мамы: <i>«что мне нужно прямо сейчас?»</i>. Ответов всего четыре: что у нас сегодня, чем кормить, как развивать, что со здоровьем. Пятый элемент — ИИ‑ассистент — не прячется в раздел, а живёт центральной кнопкой и доступен с любого экрана. Отдельного раздела «Помощь» нет: SOS‑инструкции, аптечка и гид по симптомам — это здоровье, они живут там (и на экране блокировки), а статьи и гиды распределены по своим разделам.</p>
+
+  <div class="phone-row">
+    <div class="phone" aria-label="Макет главного экрана">
+      <div class="screen">
+        <div class="p-head">
+          <div class="ava">👶</div>
+          <div><span class="name">Миша</span><div class="age">7 месяцев и 12 дней</div></div>
+          <div class="menu">☰</div>
+        </div>
+        <div class="p-card predict">
+          <div class="lbl">Прогноз сна</div>
+          <div class="val">Окно сна через ~40 мин, в 13:10</div>
+        </div>
+        <div class="p-grid">
+          <div class="p-btn sage"><span>😴</span>Сон<br><small>идёт 0:52</small></div>
+          <div class="p-btn sand"><span>🍼</span>Кормление<br><small>2 ч назад</small></div>
+          <div class="p-btn sand"><span>🩲</span>Подгузник<br><small>45 мин назад</small></div>
+          <div class="p-btn sage"><span>🙂</span>Настроение</div>
+          <div class="p-btn" style="grid-column: 1 / -1;">➕ Все записи: вода · лекарства · температура · прогулка…</div>
+        </div>
+        <div class="p-feed">
+          <div class="th">🌤️</div>
+          <div class="tx"><small>Как одеть</small>+4° и ветер — боди, комбинезон, шапка</div>
+        </div>
+        <div class="p-feed">
+          <div class="th">🧸</div>
+          <div class="tx"><small>Игра дня</small>«Где мишка?» — прятки под платком</div>
+        </div>
+        <div class="p-feed">
+          <div class="th">🥦</div>
+          <div class="tx"><small>Прикорм</small>Пора попробовать кабачок — как подать</div>
+        </div>
+        <div class="p-nav">
+          <div class="active"><span>🏠</span>Сегодня</div>
+          <div><span>🥑</span>Питание</div>
+          <div class="ai">✦</div>
+          <div><span>🌱</span>Развитие</div>
+          <div><span>🩺</span>Здоровье</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-note">
+      <h3>Почему именно так</h3>
+      <ol>
+        <li><b>Шапка — малыш, а не меню.</b> Фото, имя и возраст с точностью до дня всегда наверху. Возраст — не украшение: это главный фильтр, по нему собирается всё содержимое приложения.</li>
+        <li><b>«Сегодня» — живой экран.</b> Четыре большие кнопки трекинга (одно касание — запись пошла), прогноз следующего сна и лента «Сегодня с малышом» — 3–5 карточек, собранных к утру именно под этот возраст и данные ребёнка.</li>
+        <li><b>ИИ — центральная кнопка, а не раздел.</b> Вопрос голосом или текстом с любого экрана: «можно ли клубнику в 8 месяцев?», «температура 37,8 — что делать?». Ассистент видит журнал ребёнка и отвечает в контексте.</li>
+        <li><b>Красная кнопка SOS</b> — закреплена в разделе «Здоровье» и виджетом на экране блокировки: экстренные инструкции работают офлайн.</li>
+        <li><b>Боковое меню</b> (по аватарке или свайпу): переключение между детьми — их может быть несколько, у каждого свой профиль и журнал; настройки, подписка, семейный доступ, передача смены, чек-листы, обратная связь. Служебное живёт сбоку и не занимает место в нижней навигации.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 3 · Лента дня</p>
+  <h2>«Сегодня с малышом» — приложение делает первый ход</h2>
+  <p>Каждое утро bubka автоматически собирает персональную ленту из 3–5 карточек — на основе возраста ребёнка, его данных в журнале и даже погоды за окном. Мама не ищет информацию: приложение само приносит то, что актуально именно сегодня. Это главный механизм ежедневного удержания.</p>
+
+  <div class="feat">
+    <div class="feat-item">
+      <div class="ico">🌤️</div>
+      <div>
+        <h3>Как одеть малыша</h3>
+        <p>Первая карточка утра — по погоде за окном: «+2° и ветер — боди, флисовый комбинезон, шапка с ушами». Простая ежедневная утилита, ради которой bubka открывают до первой чашки кофе.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🎯</div>
+      <div>
+        <h3>Игры на сегодня</h3>
+        <p>1–3 развивающие игры точно под сегодняшний возраст: «в 7 месяцев и 12 дней отлично зайдут прятки под платком — тренируем постоянство объекта».</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🍽️</div>
+      <div>
+        <h3>Идея по прикорму</h3>
+        <p>Если прикорм начался — новый продукт или рецепт дня: «пора попробовать кабачок, вот как подать». Учитывает, что уже пробовали и на что была реакция.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">😴</div>
+      <div>
+        <h3>Подсказка по режиму</h3>
+        <p>«Вчера третий сон сдвинулся на час — сегодня попробуйте уложить в 12:30». Строится на реальных записях, а не на абстрактных таблицах.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🧠</div>
+      <div>
+        <h3>Что происходит в развитии</h3>
+        <p>Короткое объяснение, что сейчас в голове у малыша: «начинает бояться чужих — это норма и признак привязанности, вот как помочь».</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">❤️</div>
+      <div>
+        <h3>Маленький совет родителям</h3>
+        <p>«Сегодня хороший день попробовать пить из открытой кружки», «не забудьте сделать несколько фото — месяц назад он ещё не сидел».</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">📅</div>
+      <div>
+        <h3>Напоминания</h3>
+        <p>Прививки по календарю, ежемесячное взвешивание и измерение роста, чек новых навыков, «подгузники заканчиваются в пятницу» — всё приходит карточкой в ленту, а не теряется в настройках.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🌙</div>
+      <div>
+        <h3>Итог дня</h3>
+        <p>Вечером — одна закрывающая карточка: сколько спал, ел, гулял, и план окон сна на завтра. День закрыт с чувством «я справилась», а не с тревогой «всё ли я записала».</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p><strong>Важно про простоту:</strong> лента конечная — 3–5 карточек утром и одна вечером, и всё. Прочитала за минуту — свободна. Никакой бесконечной прокрутки: это принципиальное отличие от Glow и соцлент, которые крадут у мамы сон.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 4 · Наполнение разделов</p>
+  <h2>Что лежит в каждом разделе</h2>
+  <p>Все функции распределяются по четырём разделам и боковому меню без остатка — и у каждой есть своё очевидное место. Развитие и здоровье разделены: первое — про то, что малыш умеет и как с ним заниматься, второе — про то, как он себя чувствует.</p>
+
+  <div class="cards">
+    <div class="card">
+      <h3><span class="n">1</span>Сегодня</h3>
+      <ul>
+        <li><b>Шапка</b>: фото, имя, возраст до дня + вход в боковое меню</li>
+        <li><b>4 быстрые кнопки</b>: сон (таймер + прогноз), кормление, подгузник, настроение</li>
+        <li><b>Все записи</b> — 12 типов: сон · кормление (грудь по сторонам / смесь / прикорм) · вода · лекарства · температура · прогулка · подгузник · купание · настроение</li>
+        <li><b>Задним числом</b> — любую запись можно добавить сейчас или вписать позже с нужным временем: забыла — не потеряла</li>
+        <li><b>Лента «Сегодня с малышом»</b> — от «как одеть» утром до «итога дня» вечером</li>
+        <li><b>Звуки укладывания</b> — белый шум, сердцебиение, колыбельные с таймером, офлайн — прямо из кнопки сна</li>
+        <li><b>Умный запас</b> — bubka сам считает расход подгузников и смеси по записям и предупреждает за три дня</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="n">2</span>Питание</h3>
+      <ul>
+        <li><b>База продуктов</b> с фото: как безопасно резать и подавать в 6, 9, 12, 18 месяцев + чем полезен, аллерген ли, риск подавиться</li>
+        <li><b>Тарелки</b> — готовые сочетания «завтрак в 8 месяцев» с фото</li>
+        <li><b>Проверка тарелки по фото</b> — ИИ смотрит и подсказывает, что исправить</li>
+        <li><b>Дневник прикорма</b>: попробовали → отметили реакцию</li>
+        <li><b>Ввод аллергенов</b> — пошаговый протокол по дням</li>
+        <li><b>Что уже можно</b> — список открытых продуктов растёт с возрастом</li>
+        <li><b>Рецепты</b> — по возрасту и по ингредиентам: «есть дома банан, овсянка, творог» → рецепты</li>
+        <li><b>План питания на неделю</b> — собирается автоматически по возрасту + список покупок</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="n">3</span>Развитие</h3>
+      <ul>
+        <li><b>Скачки роста</b> — красивый таймлайн этапов: что происходит, какие навыки, во что играть, что может беспокоить, как помочь</li>
+        <li><b>Умелки</b> — карточки достижений с датой, фото, видео и заметкой: цифровой дневник малыша</li>
+        <li><b>Игры по возрасту</b> — картотека занятий на 5–15 минут с пользой каждой</li>
+        <li><b>Игрушки по возрасту</b> — что купить и, главное, чем именно полезна каждая: пирамидка — моторика и понятие размера</li>
+        <li><b>Книги малышу</b> — что читать в каждом возрасте и как читать</li>
+        <li><b>Упражнения</b> — гимнастика, массаж, зарядка по месяцам</li>
+        <li><b>Интересное о возрасте</b> — статьи и факты + анонимная статистика «а как у других?»</li>
+        <li><b>Альбом «Первый год малыша»</b> — экспорт дневника в PDF</li>
+        <li><b>Письмо в будущее</b> — капсула с письмами и фото, откроется в 18 лет</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="n">4</span>Здоровье</h3>
+      <ul>
+        <li><b>Календарь прививок</b> — нацкалендарь + напоминания + отметки «сделано»</li>
+        <li><b>Рост и вес</b> — графики на перцентилях ВОЗ</li>
+        <li><b>Состояние</b> — журнал симптомов, температуры и лекарств</li>
+        <li><b>Зубы</b> — схема прорезывания с отметками</li>
+        <li><b>SOS-инструкции</b>: подавился, упал, судороги, ожог — пошагово, крупно, офлайн</li>
+        <li><b>Аптечка</b>: что держать дома + дозировки жаропонижающего по весу</li>
+        <li><b>«Это нормально?»</b> — гид по симптомам: когда наблюдать, когда к врачу, когда скорая</li>
+        <li><b>Чат с педиатром</b> — платная консультация врача с автоматически приложенным журналом</li>
+        <li><b>PDF для педиатра</b> — экспорт журнала перед приёмом</li>
+        <li><b>Забота о маме</b> — настроение мамы + мягкий скрининг ПРД (EPDS)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="n">☰</span>Боковое меню</h3>
+      <ul>
+        <li><b>Дети</b> — несколько профилей, у каждого свой журнал; переключение в одно касание</li>
+        <li><b>Семейный доступ</b> — папа, бабушка, няня в одном журнале + режим папы с мини-заданиями</li>
+        <li><b>Передача смены</b> — ссылка-сводка для няни или бабушки без установки приложения</li>
+        <li><b>Чек-листы</b> — сумка в роддом, аптечка, безопасность дома, прогулка</li>
+        <li><b>Подписка</b> — статус, управление</li>
+        <li><b>Настройки</b> — уведомления, единицы, тёмная тема, экспорт данных</li>
+        <li><b>Обратная связь</b> — написать команде bubka в два касания</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 5 · Питание крупным планом</p>
+  <h2>Самый большой раздел приложения</h2>
+  <p>Прикорм — тема, по которой мама ищет информацию каждый день по несколько раз. Здесь bubka должен быть настолько полным, чтобы закрыть Solid Starts, и настолько наглядным, чтобы закрыть Baby Plate. Путь мамы: нашла продукт → посмотрела, как подать в её возраст → получила рецепт из того, что дома → доверила плану неделю.</p>
+
+  <div class="phone-row">
+    <div class="phone" aria-label="Макет карточки продукта">
+      <div class="screen">
+        <div class="p-hero">
+          <div class="big">🍌</div>
+          <div class="ttl">Банан</div>
+          <div class="chips">
+            <span class="chip">с 6 месяцев</span>
+            <span class="chip">аллерген: нет</span>
+            <span class="chip">риск подавиться: средний</span>
+          </div>
+        </div>
+        <div class="p-card">
+          <div class="lbl">Подача по возрасту</div>
+          <div class="seg" style="margin-top:8px;">
+            <div class="on">6 мес</div><div>7</div><div>8</div><div>9</div><div>10</div><div>12+</div>
+          </div>
+        </div>
+        <div class="serve">
+          <div><b>🍌</b>целый, в кулачке, без кожуры наполовину</div>
+          <div><b>〰️</b>длинные полоски вдоль, не кружочки</div>
+          <div><b>🥣</b>или размять вилкой в пюре</div>
+        </div>
+        <div class="p-feed">
+          <div class="th">💛</div>
+          <div class="tx"><small>Польза</small>Калий, витамин B6, мягкая клетчатка</div>
+        </div>
+        <div class="p-feed">
+          <div class="th">👩‍🍳</div>
+          <div class="tx"><small>Рецепты с бананом</small>Оладьи без сахара · банан с творогом</div>
+        </div>
+        <div class="p-nav">
+          <div><span>🏠</span>Сегодня</div>
+          <div class="active"><span>🥑</span>Питание</div>
+          <div class="ai">✦</div>
+          <div><span>🌱</span>Развитие</div>
+          <div><span>🩺</span>Здоровье</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-note">
+      <h3>Четыре слоя раздела</h3>
+      <ol>
+        <li><b>Каталог продуктов.</b> Поиск + фильтры по категориям: овощи, фрукты, каши, мясо, рыба, яйца, орехи, молочное, бобовые. У каждого продукта статус: «уже ели», «можно сейчас», «рано».</li>
+        <li><b>Карточка продукта</b> — восемь блоков: фото · возраст введения · польза · аллергены · как приготовить · как хранить · когда нельзя · что делать, если не понравилось (мягкий протокол повторных предложений — без давления и «доедай»).</li>
+        <li><b>Подача по возрасту</b> — трендовое сердце раздела: возрастной переключатель 6 · 7 · 8 · 9 · 10 · 12+ месяцев, и для каждого возраста картинка — как резать, какой размер кусочка, какая консистенция. Как Baby Plate, но внутри супераппа.</li>
+        <li><b>Рецепты и план.</b> Рецепты с фильтром по возрасту и по ингредиентам: отметила, что есть дома — банан, овсянка, творог — получила рецепты. План питания на неделю собирается автоматически: завтрак, обед, ужин, перекусы по возрасту, с учётом уже открытых продуктов и правилом «новый продукт — раз в 2–3 дня, утром». Из плана — список покупок одной кнопкой.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 6 · Развитие крупным планом</p>
+  <h2>Самый красивый раздел приложения</h2>
+  <p>«Развитие» — витрина bubka: сюда приходят не по необходимости, как к трекерам, а за радостью. Здесь всё про то, как малыш растёт — и это должно выглядеть как красивый журнал, а не как медицинская карта.</p>
+
+  <div class="cards">
+    <div class="card">
+      <h3><span class="n">🧠</span>Скачки роста — как Wonder Weeks, но честнее и красивее</h3>
+      <ul>
+        <li><b>Таймлайн этапов</b> развития с текущим положением малыша</li>
+        <li>Для каждого этапа пять ответов: <b>что сейчас происходит</b> в голове малыша · <b>какие навыки появляются</b> · <b>какие игры играть</b> · <b>что может беспокоить</b> (капризы, сон, аппетит) · <b>как помочь</b></li>
+        <li>Главная ценность — «понять ребёнка»: мама открывает раздел в трудный день и выдыхает</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="n">✓</span>Умелки — цифровой дневник достижений</h3>
+      <ul>
+        <li>Чек-лист по возрасту: <b>перевернулся · сел · пополз · сказал «мама» · первый шаг</b> — и десятки других</li>
+        <li>Каждая умелка — карточка: <b>📅 дата · 📷 фото · 🎥 видео · 📝 заметка</b></li>
+        <li>Отмечать — одно касание; заполнять фото и заметку можно потом</li>
+        <li>Из карточек сама собирается история взросления — ничего специально вести не нужно</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="n">📕</span>Альбом «Первый год малыша»</h3>
+      <ul>
+        <li>В конце первого года (и потом второго, третьего) — <b>экспорт в красивый PDF</b>: фотографии, даты умелок, график роста и веса, главные события</li>
+        <li>Готовая книга на память и <b>подарок бабушкам</b> — её показывают всем, и это лучшая реклама приложения</li>
+        <li>Сильнейший аргумент подписки: данные копятся бесплатно, альбом собирается в bubka+</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p><strong>Аккуратность формулировок:</strong> теория «скачков» (Wonder Weeks) научно спорная — точные даты скачков исследованиями не подтверждаются. Поэтому в bubka все этапы подаются как ориентиры: «примерно в этом возрасте», «сроки индивидуальны — это не медицинский стандарт, а карта местности». Это честнее конкурентов и защищает доверие к остальному контенту.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 7 · ИИ-помощник крупным планом</p>
+  <h2>Карточки вместо чата</h2>
+  <p>В первом релизе ИИ — это не свободный чат, а <b>готовые кнопки-карточки</b>. Так проще, дешевле и выглядит умнее: мама не думает, что спросить, — она нажимает на свой вопрос. Свободный чат добавляется позже, когда карточки докажут ценность.</p>
+
+  <div class="phone-row">
+    <div class="phone" aria-label="Макет экрана ИИ-помощника">
+      <div class="screen">
+        <div class="p-head">
+          <div class="ava">✦</div>
+          <div><span class="name">Помощник</span><div class="age">знает Мишу: 7 мес и 12 дней</div></div>
+        </div>
+        <div class="ai-grid">
+          <div class="ai-btn"><span>☀️</span>Что сегодня с малышом?</div>
+          <div class="ai-btn"><span>😴</span>Анализ сна</div>
+          <div class="ai-btn"><span>🥦</span>Идеи прикорма</div>
+          <div class="ai-btn"><span>🧸</span>Какие игры подойдут?</div>
+          <div class="ai-btn"><span>📋</span>Составь день по режиму</div>
+          <div class="ai-btn"><span>😢</span>Почему капризничает?</div>
+        </div>
+        <div class="ai-answer">
+          <div class="lbl">Анализ сна · сегодня</div>
+          Последние 3 дня сон стал более фрагментированным: ночью до 8 пробуждений. Возможные причины: новый продукт (брокколи), скачок развития, перегул, зубы. Сегодня попробуйте сдвинуть второй сон на 30 минут раньше…
+          <div class="lbl" style="margin-top:8px;">Не заменяет консультацию врача</div>
+        </div>
+        <div class="p-nav">
+          <div><span>🏠</span>Сегодня</div>
+          <div><span>🥑</span>Питание</div>
+          <div class="ai">✦</div>
+          <div><span>🌱</span>Развитие</div>
+          <div><span>🩺</span>Здоровье</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-note">
+      <h3>Что помощник знает о малыше</h3>
+      <p class="muted" style="font-size:.93rem;">Имя и возраст · сон за последние дни · кормления и прикорм · настроение · умелки · прививки · заметки мамы. Перед каждым запросом bubka собирает из журнала компактную сводку за 3–7 дней и подставляет её в промпт — поэтому ответы не общие, а про этого ребёнка.</p>
+      <h3 style="margin-top:20px;">Как это устроено технически</h3>
+      <ol>
+        <li><b>База данных</b>: профиль ребёнка + все записи трекеров (дата, тип, значение) — обычная реляционная БД.</li>
+        <li><b>Дайджест</b>: бэкенд агрегирует последние дни в короткую сводку — «6 мес 8 дней, дневной сон 2:40, ночь с 8 пробуждениями, новое: брокколи, настроение капризное».</li>
+        <li><b>Промпт</b>: у каждой карточки свой фиксированный шаблон с жёсткими правилами безопасности; сводка подставляется в него.</li>
+        <li><b>Модель</b>: один запрос к Claude API, ответ в заданной структуре: наблюдение → возможные причины → что попробовать сегодня → когда обратиться к врачу.</li>
+        <li><b>Кеш</b>: карточка пересобирается раз в день (или при новых данных) — экономика сходится даже на бесплатном тарифе.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p><strong>Границы безопасности — зашиты в промпт и в интерфейс.</strong> Помощник никогда не ставит диагнозы, не называет лекарства и не говорит «это точно зубы». Разрешённый словарь: «возможные причины», «что отследить», «что попробовать», «когда обратиться к врачу». При тревожных симптомах (температура у младенца до 3 месяцев, сыпь с отёком, отказ от еды и питья) — всегда один ответ: к врачу, с кнопкой на SOS-раздел. Под каждым ответом дисклеймер, на старте — выборочное ревью ответов педиатром.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 8 · Фишки-магниты</p>
+  <h2>Фишки в составе продукта</h2>
+  <p>Функции, которых нет у конкурентов в связке — каждая либо продаёт подписку, либо удерживает в приложении всю семью, либо закрывает ещё одно стороннее приложение. Все уже распределены по разделам — у каждой указан «домашний» раздел.</p>
+
+  <div class="feat">
+    <div class="feat-item">
+      <div class="ico">📸</div>
+      <div>
+        <span class="star">Killer feature</span> <span class="home">Питание</span>
+        <h3>Проверка тарелки по фото</h3>
+        <p>Мама фотографирует тарелку — ИИ проверяет: «виноград нужно разрезать вдоль на 4 части, морковь пока слишком твёрдая». Никто на рынке этого не делает.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🎙️</div>
+      <div>
+        <span class="home">Сегодня</span>
+        <h3>Голосовой и одноручный ввод</h3>
+        <p>«Покормила в 14:30, левая грудь» — запись создана. Плюс виджеты на экран блокировки и Apple Watch: трекинг вообще без открытия приложения.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">👨‍👩‍👧</div>
+      <div>
+        <span class="home">Боковое меню</span>
+        <h3>Семейный доступ и режим папы</h3>
+        <p>Папа, бабушка и няня видят один журнал в реальном времени, а партнёру приходят мини-задания: «возьми утреннюю прогулку — маме нужен час сна». Сильнейший драйвер удержания и вирального роста.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🔗</div>
+      <div>
+        <span class="home">Боковое меню</span>
+        <h3>Передача смены</h3>
+        <p>Одна ссылка для бабушки или няни — без установки приложения: режим дня, что ел, что дать, что нельзя, контакты врача. Действует, пока идёт «смена».</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🎧</div>
+      <div>
+        <span class="home">Сегодня</span>
+        <h3>Звуки укладывания</h3>
+        <p>Белый шум, сердцебиение, колыбельные — с таймером и офлайн. Нажала «сон» — bubka предложил включить шум. Минус ещё одно приложение на телефоне.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">📦</div>
+      <div>
+        <span class="home">Сегодня</span>
+        <h3>Умный запас</h3>
+        <p>По записям bubka сам считает расход подгузников и смеси и предупреждает за три дня: «подгузники закончатся в пятницу». Потенциал партнёрских доходов без рекламы в интерфейсе.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">📊</div>
+      <div>
+        <span class="home">Развитие</span>
+        <h3>«А как у других?»</h3>
+        <p>Анонимная статистика вместо форумов: «68% малышей в 7 месяцев всё ещё просыпаются ночью». Успокаивает лучше любой статьи — без сравнения себя с идеальными мамами из соцсетей.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🩺</div>
+      <div>
+        <span class="home">Здоровье</span>
+        <h3>Чат с педиатром + PDF для врача</h3>
+        <p>Платная консультация прямо из приложения с автоматически приложенным журналом. А перед обычным приёмом — экспорт PDF: сон, питание, стул, температура, реакции. Врачи сами начнут рекомендовать bubka.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🌙</div>
+      <div>
+        <span class="home">Сегодня</span>
+        <h3>Ночной режим 3:00</h3>
+        <p>После заката — тёмный тусклый экран, огромные кнопки, никаких лент и уведомлений. Прямой ответ на главную боль: трекер, крадущий сон.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">💛</div>
+      <div>
+        <span class="home">Здоровье</span>
+        <h3>Забота о маме</h3>
+        <p>Трекер настроения мамы + мягкий скрининг послеродовой депрессии (шкала EPDS) + напоминания «поешь и попей воды». Про маму все конкуренты забыли.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">📋</div>
+      <div>
+        <span class="home">Боковое меню</span>
+        <h3>Чек-листы</h3>
+        <p>Сумка в роддом, аптечка, безопасность дома при ползании, сумка на прогулку, что купить к прикорму. Готовые, по возрасту, с галочками.</p>
+      </div>
+    </div>
+    <div class="feat-item">
+      <div class="ico">🎞️</div>
+      <div>
+        <span class="home">Развитие</span>
+        <h3>Капсула времени и письмо в будущее</h3>
+        <p>Фото к умелкам собираются в автоматические «истории месяца», а мама может писать ребёнку письма — капсула откроется в 18 лет. Такое приложение не удаляют.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 9 · Принципы простоты</p>
+  <h2>Правила, которые держат структуру простой</h2>
+  <div class="princ">
+    <div>
+      <h3>Одно касание — одно действие</h3>
+      <p>Любая запись (сон, еда, подгузник) — максимум 1–2 тапа с главного экрана. Детали можно дописать потом, а можно не дописывать никогда.</p>
+    </div>
+    <div>
+      <h3>Возраст фильтрует всё</h3>
+      <p>Ни одного экрана «всё обо всём». Приложение всегда показывает срез под текущий возраст — поэтому контента много, а ощущения перегруза нет.</p>
+    </div>
+    <div>
+      <h3>Никаких лент и рекламы</h3>
+      <p>Открыла — записала — закрыла за 5 секунд. Комьюнити и соцфункции сознательно не строим: это чужая война (Glow) и источник залипания.</p>
+    </div>
+    <div>
+      <h3>Приложение приходит само</h3>
+      <p>Не мама ищет статью — лента «Сегодня с малышом» приносит нужное в нужный день: «завтра 6 месяцев — можно начинать прикорм, вот с чего».</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 10 · Монетизация</p>
+  <h2>Freemium: трекинг бесплатный навсегда</h2>
+  <p>Классическая ошибка рынка — пейволл на базовом трекинге: он убивает и удержание, и сарафан. Бесплатная часть должна быть лучшим бесплатным трекером на рынке, платная — продавать «спокойствие и экономию времени».</p>
+  <div class="free-paid">
+    <div class="card">
+      <h3>Бесплатно</h3>
+      <ul>
+        <li>Все 12 трекеров без ограничений, задним числом тоже</li>
+        <li>Профили нескольких детей — бесплатно (мамы двойняшек нам дороги)</li>
+        <li>Календарь прививок и напоминания</li>
+        <li>Графики роста и веса</li>
+        <li>SOS-инструкции (принципиально бесплатно)</li>
+        <li>Базовая часть базы продуктов</li>
+        <li>ИИ-карточка «Что сегодня с малышом?» — ежедневно</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Подписка bubka+</h3>
+      <ul>
+        <li>Все ИИ-карточки (анализ сна, идеи прикорма, игры, режим, капризы) + свободный чат без лимита</li>
+        <li>Проверка тарелки по фото</li>
+        <li>Прогноз сна</li>
+        <li>Полная база продуктов, рецепты по ингредиентам, план питания на неделю</li>
+        <li>Семейный доступ (до 5 человек)</li>
+        <li>PDF-отчёты для педиатра</li>
+        <li>Альбом «Первый год малыша» в PDF</li>
+        <li>Все гиды-курсы</li>
+      </ul>
+      <p class="price">~449 ₽/мес или 2 990 ₽/год · триал 7 дней</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Часть 11 · План запуска</p>
+  <h2>Дорожная карта: от журнала к суперappу</h2>
+  <div class="road">
+    <div class="road-step">
+      <div class="marker"><div class="dot">1</div><div class="stem"></div></div>
+      <div class="body">
+        <h3>MVP <span>2–3 месяца</span></h3>
+        <p>Экран «Сегодня» с шапкой (фото, имя, возраст), все 12 типов записей с добавлением задним числом, боковое меню с профилями детей, 50 главных продуктов прикорма с подачей по возрасту, календарь прививок, графики ВОЗ, SOS-инструкции офлайн — и две ИИ-карточки: «Что сегодня с малышом?» и «Анализ сна». Готовые кнопки, не чат: фиксированные промпты, предсказуемая безопасность, копеечная себестоимость. Цель — стать ежедневной привычкой.</p>
+      </div>
+    </div>
+    <div class="road-step">
+      <div class="marker"><div class="dot">2</div><div class="stem"></div></div>
+      <div class="body">
+        <h3>Версия 1.0 <span>+3 месяца</span></h3>
+        <p>Все шесть ИИ-карточек + свободный чат с контекстом журнала, полная база продуктов, рецепты по ингредиентам и план питания на неделю, раздел «Развитие» целиком (скачки, умелки-карточки с фото и видео, игры, игрушки, книги, упражнения), альбом «Первый год малыша», лента становится персональной (учитывает данные журнала и погоду), семейный доступ. Включаем подписку.</p>
+      </div>
+    </div>
+    <div class="road-step">
+      <div class="marker"><div class="dot">3</div><div class="stem"></div></div>
+      <div class="body">
+        <h3>Версия 2.0 <span>+6 месяцев</span></h3>
+        <p>Прогноз сна на своих данных, проверка тарелки по фото, голосовой ввод и виджеты, звуки укладывания, умный запас, передача смены, чат с педиатром, забота о маме, письмо в будущее. Задел: беременность (воронка сверху) и 3+ лет (удержание снизу). К этому моменту bubka закрывает весь путь от роддома до сада.</p>
+      </div>
+    </div>
+  </div>
+  <div class="callout">
+    <p><strong>Два обязательных условия доверия:</strong> весь медицинский контент проходит ревью практикующего педиатра с указанием имени и источников (это же — юридическая защита), а данные о ребёнке никогда не продаются и не используются для рекламы — на фоне скандалов с данными в женских приложениях приватность становится маркетинговым преимуществом.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Источники: <a href="https://pebbi.co/blog/best-baby-tracker-apps-2026">сравнение трекеров 2026 (Pebbi)</a> · <a href="https://tinylog.app/guides/best-baby-tracker-app">обзор топ-7 трекеров (Tinylog)</a> · <a href="https://solidstarts.com/app/">Solid Starts</a> · <a href="https://www.businessresearchinsights.com/market-reports/parenting-apps-market-113806">объём рынка parenting apps</a> · <a href="https://www.insightaceanalytic.com/report/parenting-apps-market/3219">анализ конкурентов рынка</a> · <a href="https://newsroom.uw.edu/blog/newborn-tracking-apps-might-not-be-that-useful">UW Medicine о трекерах и сне</a> · <a href="https://www.fatherly.com/parenting/the-wonder-weeks-child-development-fact-check">факт-чек Wonder Weeks</a> · <a href="https://materinstvo.ru/poleznoe/14811">рейтинг приложений для мам (RU)</a></p>
+</footer>
+
+</div>
+</div>
+
+
